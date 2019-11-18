@@ -9,6 +9,7 @@ reveal_all
 hide_all
 
 note: should we have the size of the window as an attribute to make it easier to draw the whole grid?
+or maybe the size of the window could be a parameter for the draw method?
 
 ___
 
