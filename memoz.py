@@ -49,12 +49,14 @@ class Tile:
         Reveal the tile so when it is displayed on screen the player can see
         whether or not this is a target tile.
         '''
-        pass
+        self._revealed = True
 
     def hide(self):
         '''
         Hide the tile so when it is displayed on screen the player is unable to
         see what kind of tile this is.
         '''
-        pass
+        self._revealed = False
     
+    def flip(self):
+        self._revealed = not self._revealed
