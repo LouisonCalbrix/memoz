@@ -29,7 +29,7 @@ def tile_display():
     ]
     # pygame init
     pygame.init()
-    screen = pygame.display.set_mode((400, 400))
+    screen = pygame.display.set_mode((150, 100))
     clock = pygame.time.Clock()
     fps = 20
     # every 50 frame target_tile3 and wrong_tile3 are flipped
