@@ -59,4 +59,8 @@ class Tile:
         self._revealed = False
     
     def flip(self):
+        '''
+        Flip the tile so, if it's hidden, it gets revealed and the other way 
+        around.
+        '''
         self._revealed = not self._revealed
