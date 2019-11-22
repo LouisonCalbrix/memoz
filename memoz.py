@@ -88,3 +88,41 @@ class Tile:
         else:
             return ' '
 
+
+class Grid(object):
+    """docstring for Grid"""
+    def __init__(self, height, width):
+        self._height = height
+        self._width = width
+
+        self._tiles = ([
+            [Tile(target=False, revealed=False) for _ in range(width)]
+            for _ in range(height)
+        ])
+
+
+    @property
+    def height(self):
+        return self._height
+
+    @property
+    def width(self):
+        return self._width
+
+    @property
+    def tiles(self):
+        return self._tiles
+
+
+    def __getitem__(self, coords):
+        return self.tiles[coords[0]][coords[1]]
+
+    def __str__(self):
+        res = ''
+        for i in range(self.height):
+            for j in range(self.width):
+                res += '|{}'.format(self[i, j])
+
+            res += '|\n'
+
+        return res
