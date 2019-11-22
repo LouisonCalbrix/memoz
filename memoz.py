@@ -44,23 +44,47 @@ class Tile:
             display_img = Tile.IMAGES[0]
         display_surface.blit(display_img, window_coordinates)
 
+
+    @property
+    def target(self):
+        return self._target
+    
+    @property
+    def revealed(self):
+        return self._revealed
+    
+    @revealed.setter
+    def revealed(self, value):
+        self._revealed = value
+
+
     def reveal(self):
         '''
         Reveal the tile so when it is displayed on screen the player can see
         whether or not this is a target tile.
         '''
-        self._revealed = True
+        self.revealed = True
 
     def hide(self):
         '''
         Hide the tile so when it is displayed on screen the player is unable to
         see what kind of tile this is.
         '''
-        self._revealed = False
+        self.revealed = False
     
     def flip(self):
         '''
         Flip the tile so, if it's hidden, it gets revealed and the other way 
         around.
         '''
-        self._revealed = not self._revealed
+        self.revealed = not self.revealed
+
+    def __str__(self):
+        if (self.revealed):
+            if (self.target):
+                return 'O'
+            else:
+                return 'X'
+        else:
+            return ' '
+
