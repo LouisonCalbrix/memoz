@@ -1,10 +1,10 @@
 class: Grid
 attributes:
-cases (list of Case)
+cases (list of Tile)
 
 methods:
 draw
-reveal_case(index)
+reveal_tile(index)
 reveal_all
 hide_all
 
@@ -13,7 +13,7 @@ or maybe the size of the window could be a parameter for the draw method?
 
 ___
 
-class: Case
+class: Tile
 attributes:
 target (bool)
 currently_revealed (bool)
