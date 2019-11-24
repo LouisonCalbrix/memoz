@@ -11,6 +11,7 @@
 # date: November 2019
 
 import pygame
+from random import sample
 
 class Tile:
     '''
@@ -19,14 +20,17 @@ class Tile:
     is True it is displayed so that we can differentiate between a target Tile
     and a non target one, when _revealed is False all the Tiles look the same.
     '''
-    IMAGES = [
-        pygame.image.load('resources/hidden-tile.png'),
-        pygame.image.load('resources/right-tile.png'),
-        pygame.image.load('resources/wrong-tile.png')
-    ]
+
+    IMG_HIDDEN = pygame.image.load('resources/hidden-tile.png')
+    IMG_TARGET = pygame.image.load('resources/right-tile.png')
+    IMG_WRONG = pygame.image.load('resources/wrong-tile.png')
 
 
     def __init__(self, target, revealed):
+        '''
+        Initialisation of a tile, target and revealed are both expected to be
+        booleans.
+        '''
         self._target = target
         self._revealed = revealed
 
@@ -37,11 +41,11 @@ class Tile:
         '''
         if self._revealed:
             if self._target:
-                display_img = Tile.IMAGES[1]
+                display_img = Tile.IMG_TARGET
             else:
-                display_img = Tile.IMAGES[2]
+                display_img = Tile.IMG_WRONG
         else:
-            display_img = Tile.IMAGES[0]
+            display_img = Tile.IMG_HIDDEN
         display_surface.blit(display_img, window_coordinates)
 
 
@@ -91,14 +95,27 @@ class Tile:
 
 class Grid(object):
     """docstring for Grid"""
-    def __init__(self, height, width):
+    def __init__(self, height, width, nb_target):
         self._height = height
         self._width = width
 
-        self._tiles = ([
-            [Tile(target=False, revealed=False) for _ in range(width)]
-            for _ in range(height)
-        ])
+        # randomly picks targets
+        targets = sample([(i, j) for i in range(width) for j in range(height)],
+                         nb_target)
+
+        self._tiles = []
+        for j in range(height):
+            a_row = []
+            for i in range(width):
+                if (i, j) in targets:
+                    a_row.append(Tile(target=True, revealed=False))
+                else:
+                    a_row.append(Tile(target=False, revealed=False))
+            self._tiles.append(a_row)
+#        self._tiles = ([
+#            [Tile(target=False, revealed=False) for _ in range(width)]
+#            for _ in range(height)
+#        ])
 
 
     @property
@@ -113,6 +130,21 @@ class Grid(object):
     def tiles(self):
         return self._tiles
 
+    def reveal_all(self):
+        '''
+        Reveal every tile of the grid.
+        '''
+        for row in self._tiles:
+            for tile in row:
+                tile.reveal()
+
+    def hide_all(self):
+        '''
+        Hide every tile of the grid.
+        '''
+        for row in self._tiles:
+            for tile in row:
+                tile.hide()
 
     def __getitem__(self, coords):
         return self.tiles[coords[0]][coords[1]]
