@@ -32,7 +32,7 @@ def tile_display():
     screen = pygame.display.set_mode((150, 100))
     clock = pygame.time.Clock()
     fps = 20
-    # every 50 frame target_tile3 and wrong_tile3 are flipped
+    # every 30 frame target_tile3 and wrong_tile3 are flipped
     frame_count = 0
     flip_frequency = 30
     while True:
@@ -51,5 +51,29 @@ def tile_display():
                     quit()
         pygame.display.flip()
 
+def grid_display(rows, columns, nb_targets):
+    grid = Grid(rows, columns, nb_targets)
+
+    # pygame init
+    pygame.init()
+    screen = pygame.display.set_mode((500, 500))
+    clock = pygame.time.Clock()
+    fps = 20
+    # after 100 frames all the tiles of the grid are hidden
+    frame_count = 100
+    while True:
+        if frame_count != 0:
+            frame_count -= 1
+        elif frame_count == 0:
+            grid.hide_all()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+        grid.draw(screen)
+        pygame.display.flip()
+        clock.tick(fps)
+    pass
+
 if __name__ == '__main__':
-    tile_display()
+    grid_display(5, 6, 3)
