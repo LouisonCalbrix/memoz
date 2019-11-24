@@ -13,6 +13,10 @@
 import pygame
 from random import sample
 
+#constants
+WIDTH_TILE = 50
+HEIGHT_TILE = 50
+
 class Tile:
     '''
     A Tile is a square that is either a target or not. The player must memorise
@@ -94,7 +98,13 @@ class Tile:
 
 
 class Grid(object):
-    """docstring for Grid"""
+    '''
+    A Grid is a set of tiles, that has both target tiles and other tiles. At
+    the beginning of the game all tiles are revealed so the player can see
+    and memorize them. Then, every tile of the Grid is hidden and at this 
+    point the player needs to find back where the target tiles are.
+    '''
+
     def __init__(self, height, width, nb_target):
         self._height = height
         self._width = width
@@ -108,9 +118,9 @@ class Grid(object):
             a_row = []
             for i in range(width):
                 if (i, j) in targets:
-                    a_row.append(Tile(target=True, revealed=False))
+                    a_row.append(Tile(target=True, revealed=True))
                 else:
-                    a_row.append(Tile(target=False, revealed=False))
+                    a_row.append(Tile(target=False, revealed=True))
             self._tiles.append(a_row)
 #        self._tiles = ([
 #            [Tile(target=False, revealed=False) for _ in range(width)]
@@ -145,6 +155,20 @@ class Grid(object):
         for row in self._tiles:
             for tile in row:
                 tile.hide()
+
+    def reveal_tile(self, row, column):
+        '''
+        Reveal tile sitting at (row, column).
+        '''
+        self[row, column].reveal()
+
+    def draw(self, surface):
+        '''
+        Draw the whole grid on the given surface.
+        '''
+        for i, row in enumerate(self._tiles):
+            for j, tile in enumerate(row):
+                tile.draw_at(surface, (j*WIDTH_TILE, i*HEIGHT_TILE))
 
     def __getitem__(self, coords):
         return self.tiles[coords[0]][coords[1]]
