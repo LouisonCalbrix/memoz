@@ -14,8 +14,9 @@ import pygame
 from random import sample
 
 #constants
-WIDTH_TILE = 50
-HEIGHT_TILE = 50
+WIDTH_TILE = 40
+HEIGHT_TILE = 40
+MARGIN_TILE = 10
 
 class Tile:
     '''
@@ -105,13 +106,18 @@ class Grid(object):
     point the player needs to find back where the target tiles are.
     '''
 
-    def __init__(self, height, width, nb_target):
+    def __init__(self, height, width, nb_target, window_size):
         self._height = height
         self._width = width
 
         # randomly picks targets
         targets = sample([(i, j) for i in range(width) for j in range(height)],
                          nb_target)
+
+        # geometry
+        width_window, height_window = window_size
+        self._margin = ((width_window - (self._width * WIDTH_TILE + (self._width - 1) * MARGIN_TILE)) // 2,
+                        (height_window - (self._height * HEIGHT_TILE + (self._height - 1) * MARGIN_TILE)) // 2)
 
         self._tiles = []
         for j in range(height):
@@ -168,7 +174,9 @@ class Grid(object):
         '''
         for i, row in enumerate(self._tiles):
             for j, tile in enumerate(row):
-                tile.draw_at(surface, (j*WIDTH_TILE, i*HEIGHT_TILE))
+                x_window = self._margin[0] + j * (WIDTH_TILE + MARGIN_TILE)
+                y_window = self._margin[1] + i * (HEIGHT_TILE + MARGIN_TILE)
+                tile.draw_at(surface, (x_window, y_window))
 
     def __getitem__(self, coords):
         return self.tiles[coords[0]][coords[1]]

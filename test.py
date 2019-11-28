@@ -52,11 +52,12 @@ def tile_display():
         pygame.display.flip()
 
 def grid_display(rows, columns, nb_targets):
-    grid = Grid(rows, columns, nb_targets)
+    window_size = (450, 700)
+    grid = Grid(rows, columns, nb_targets, window_size)
 
     # pygame init
     pygame.init()
-    screen = pygame.display.set_mode((500, 500))
+    screen = pygame.display.set_mode(window_size)
     clock = pygame.time.Clock()
     fps = 20
     # after 100 frames all the tiles of the grid are hidden
@@ -76,4 +77,4 @@ def grid_display(rows, columns, nb_targets):
     pass
 
 if __name__ == '__main__':
-    grid_display(5, 6, 3)
+    grid_display(9, 5, 8)
