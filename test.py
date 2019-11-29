@@ -77,4 +77,4 @@ def grid_display(rows, columns, nb_targets):
     pass
 
 if __name__ == '__main__':
-    grid_display(9, 5, 8)
+    grid_display(12, 8, 8)

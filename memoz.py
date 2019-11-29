@@ -14,8 +14,9 @@ import pygame
 from random import sample
 
 #constants
-WIDTH_TILE = 40
-HEIGHT_TILE = 40
+SIDE_TILE = 40
+#WIDTH_TILE = 40
+#HEIGHT_TILE = 40
 MARGIN_TILE = 10
 
 class Tile:
@@ -110,15 +111,18 @@ class Grid(object):
         self._height = height
         self._width = width
 
-        # randomly picks targets
+        # geometry
+        # calculate the margin between the window's edges and the grid's
+        width_window, height_window = window_size
+        width_grid = self._width * SIDE_TILE + (self._width - 1) * MARGIN_TILE
+        height_grid = self._height * SIDE_TILE + (self._height - 1) * MARGIN_TILE
+        self._margin = ((width_window - width_grid) // 2,
+                        (height_window - height_grid) // 2)
+
+        # randomly pick targets
         targets = sample([(i, j) for i in range(width) for j in range(height)],
                          nb_target)
-
-        # geometry
-        width_window, height_window = window_size
-        self._margin = ((width_window - (self._width * WIDTH_TILE + (self._width - 1) * MARGIN_TILE)) // 2,
-                        (height_window - (self._height * HEIGHT_TILE + (self._height - 1) * MARGIN_TILE)) // 2)
-
+        # create tiles
         self._tiles = []
         for j in range(height):
             a_row = []
@@ -128,11 +132,6 @@ class Grid(object):
                 else:
                     a_row.append(Tile(target=False, revealed=True))
             self._tiles.append(a_row)
-#        self._tiles = ([
-#            [Tile(target=False, revealed=False) for _ in range(width)]
-#            for _ in range(height)
-#        ])
-
 
     @property
     def height(self):
@@ -174,8 +173,8 @@ class Grid(object):
         '''
         for i, row in enumerate(self._tiles):
             for j, tile in enumerate(row):
-                x_window = self._margin[0] + j * (WIDTH_TILE + MARGIN_TILE)
-                y_window = self._margin[1] + i * (HEIGHT_TILE + MARGIN_TILE)
+                x_window = self._margin[0] + j * (SIDE_TILE + MARGIN_TILE)
+                y_window = self._margin[1] + i * (SIDE_TILE + MARGIN_TILE)
                 tile.draw_at(surface, (x_window, y_window))
 
     def __getitem__(self, coords):
