@@ -167,6 +167,29 @@ class Grid(object):
         '''
         self[row, column].reveal()
 
+    def tile_at(self, coords):
+        '''
+        Return the tile sitting at coords. coords are window coordinates.
+        If there is no tile at this location, None is returned.
+        '''
+        # grid-wise coords 
+        x_grid, y_grid = (coord-margin for coord, margin in zip(coords, self._margin))
+
+        width_grid = self._width * SIDE_TILE + (self._width - 1) * MARGIN_TILE
+        height_grid = self._height * SIDE_TILE + (self._height - 1) * MARGIN_TILE
+        # check whether the cursor is in the grid area or not
+        if 0 <= x_grid <= width_grid and 0 <= y_grid <= height_grid:
+            # check whether the cursor is over a tile or the space between tiles
+            if (x_grid % (SIDE_TILE+MARGIN_TILE) <= SIDE_TILE and
+                y_grid % (SIDE_TILE+MARGIN_TILE) <= SIDE_TILE):
+                column = x_grid // (SIDE_TILE+MARGIN_TILE)
+                row = y_grid // (SIDE_TILE+MARGIN_TILE)
+                # temporary return value for testing purpose
+                return row, column
+#                return self[row, column]
+#        else:
+#            return None
+
     def draw(self, surface):
         '''
         Draw the whole grid on the given surface.

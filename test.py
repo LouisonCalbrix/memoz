@@ -71,6 +71,10 @@ def grid_display(rows, columns, nb_targets):
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = pygame.mouse.get_pos()
+                print('mouse on tile: {}'.format(grid.tile_at(mouse_pos)))
+            
         grid.draw(screen)
         pygame.display.flip()
         clock.tick(fps)
