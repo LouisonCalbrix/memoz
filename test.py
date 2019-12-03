@@ -78,7 +78,6 @@ def grid_display(rows, columns, nb_targets):
         grid.draw(screen)
         pygame.display.flip()
         clock.tick(fps)
-    pass
 
 if __name__ == '__main__':
     grid_display(12, 8, 8)
