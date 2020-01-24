@@ -212,3 +212,45 @@ class Grid(object):
             res += '|\n'
 
         return res
+
+class GameState:
+    '''
+    GameState is the class that encapsulate the game logic. It allows the player
+    to interact with a game's grid and display that grid onscreen.
+    '''
+
+    def __init__(self, grid_dim, time, total_tries, screen):
+        self._timer = time          # time tiles will be revealed at the beginning
+        self._grid_dim = grid_dim   # size of Grid instances 
+        self._tries = total_tries   # number of tries before game over
+        self._screen = screen
+        pass
+
+    def update(self):
+        '''
+        Method called once per frame, update every game component according to
+        the user's input and time.
+        '''
+        pass
+
+    def start_game(self):
+        '''
+        Instanciate Grid, initialize tries. 
+        '''
+        self._remaing_tries = total_tries   # current number of tries (to be decreased)
+        window_size = self._screen.get_size()
+        self._grid = Grid(*self._grid_gim, self._nb_target, window_size)
+        pass
+
+    # factories
+    @classmethod
+    def EasyGame(cls):
+        pass
+
+    @classmethod
+    def NormalGame(cls):
+        pass
+
+    @classmethod
+    def HardGame(cls):
+        pass
