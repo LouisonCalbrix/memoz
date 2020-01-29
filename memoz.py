@@ -220,7 +220,7 @@ class GameState:
     '''
 
     def __init__(self, grid_dim, time, total_tries, screen):
-        self._timer = time          # time tiles will be revealed at the beginning
+        self._time = time           # time tiles will be revealed at the beginning
         self._grid_dim = grid_dim   # size of Grid instances 
         self._tries = total_tries   # number of tries before game over
         self._screen = screen
@@ -231,15 +231,44 @@ class GameState:
         Method called once per frame, update every game component according to
         the user's input and time.
         '''
+        # phase 1: reveal tiles until timer is 0
+        if self._timer:
+            self._timer -= 1
+            # time's up hide all the tiles
+            if self._timer == 0:
+                self._grid.hide_all()
+
+        # phase 2: player needs to find the good tiles
+        else:
+            # as long as there are remaining tries
+            # capture mouse events?
+            # if click: reveal tile at position?
+            # if revealed tile is not target decrease remaining tries
+
+        self.draw_game()     # draw game and relevent informations at every frame
         pass
 
     def start_game(self):
         '''
-        Instanciate Grid, initialize tries. 
+        Instanciate Grid, initialize _remaining_tries and timer.
         '''
-        self._remaing_tries = total_tries   # current number of tries (to be decreased)
+        self._remaining_tries = self._tries   # current number of tries (to be decreased)
+        self._timer = self._time              # timer (to be decreased) 
         window_size = self._screen.get_size()
         self._grid = Grid(*self._grid_gim, self._nb_target, window_size)
+        pass
+
+    def draw_timer(self):
+        '''
+        Draw onscreen a representation of the time remaining during which
+        tiles are all revealed.
+        '''
+        pass
+    
+    def draw_game(self):
+        '''
+        Draw grid, remaining tries, timer(, points?)
+        '''
         pass
 
     # factories
