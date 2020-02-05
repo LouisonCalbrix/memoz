@@ -74,6 +74,7 @@ class Tile:
         whether or not this is a target tile.
         '''
         self.revealed = True
+        return self.target
 
     def hide(self):
         '''
@@ -161,11 +162,12 @@ class Grid(object):
             for tile in row:
                 tile.hide()
 
-    def reveal_tile(self, row, column):
+    def reveal_tile(self, coords):
         '''
         Reveal tile sitting at (row, column).
         '''
-        self[row, column].reveal()
+        tile = self.tile_at(coords)
+        return tile.reveal()
 
     def tile_at(self, coords):
         '''
@@ -185,10 +187,8 @@ class Grid(object):
                 column = x_grid // (SIDE_TILE+MARGIN_TILE)
                 row = y_grid // (SIDE_TILE+MARGIN_TILE)
                 # temporary return value for testing purpose
-                return row, column
-#                return self[row, column]
-#        else:
-#            return None
+#                return row, column
+                return self[row, column]
 
     def draw(self, surface):
         '''
@@ -219,9 +219,10 @@ class GameState:
     to interact with a game's grid and display that grid onscreen.
     '''
 
-    def __init__(self, grid_dim, time, total_tries, screen):
+    def __init__(self, grid_dim, nb_target, time, total_tries, screen):
         self._time = time           # time tiles will be revealed at the beginning
         self._grid_dim = grid_dim   # size of Grid instances 
+        self._nb_target = nb_target
         self._tries = total_tries   # number of tries before game over
         self._screen = screen
         pass
@@ -241,10 +242,23 @@ class GameState:
         # phase 2: player needs to find the good tiles
         else:
             # as long as there are remaining tries
-            # capture mouse events?
-            # if click: reveal tile at position?
+            # if click: reveal tile at this position
             # if revealed tile is not target decrease remaining tries
-
+            # TODO: prevent player from clicking on a revealed tile
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    quit()
+                if self._remaining_tries:
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        print('a')
+                        pos = pygame.mouse.get_pos()
+                        try:
+                            if not self._grid.reveal_tile(pos):
+                                self._remaining_tries -= 1
+                        # mouse clicked while not over a tile
+                        except AttributeError:
+                            pass
         self.draw_game()     # draw game and relevent informations at every frame
         pass
 
@@ -255,8 +269,15 @@ class GameState:
         self._remaining_tries = self._tries   # current number of tries (to be decreased)
         self._timer = self._time              # timer (to be decreased) 
         window_size = self._screen.get_size()
-        self._grid = Grid(*self._grid_gim, self._nb_target, window_size)
-        pass
+        self._grid = Grid(*self._grid_dim, self._nb_target, window_size)
+
+    def draw_tries(self):
+        '''
+        Write onscreen how many tries does the player have left.
+        '''
+        font = pygame.font.Font(None, 55)
+        txt_surf = font.render(str(self._remaining_tries), False, (255, 255, 255))
+        self._screen.blit(txt_surf, (0,0))
 
     def draw_timer(self):
         '''
@@ -269,6 +290,9 @@ class GameState:
         '''
         Draw grid, remaining tries, timer(, points?)
         '''
+        self.draw_timer()
+        self.draw_tries()
+        self._grid.draw(self._screen)
         pass
 
     # factories
