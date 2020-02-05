@@ -79,5 +79,23 @@ def grid_display(rows, columns, nb_targets):
         pygame.display.flip()
         clock.tick(fps)
 
+def game(rows, columns, nb_targets):
+    window_size = (450, 700)
+    # pygame init
+    pygame.init()
+    screen = pygame.display.set_mode(window_size)
+    clock = pygame.time.Clock()
+    fps = 20
+    # game init
+    time  = 2 * fps          # 2 seconds in fps
+    game = GameState((rows, columns), nb_targets, time, 5, screen)
+    game.start_game()
+    while True:
+        screen.fill((0, 0, 0))
+        game.update()
+        pygame.display.flip()
+        clock.tick(fps)
+
+
 if __name__ == '__main__':
-    grid_display(12, 8, 8)
+    game(12, 8, 8)
