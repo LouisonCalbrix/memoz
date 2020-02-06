@@ -73,8 +73,11 @@ class Tile:
         Reveal the tile so when it is displayed on screen the player can see
         whether or not this is a target tile.
         '''
-        self.revealed = True
-        return self.target
+        if not self.revealed:
+            self.revealed = True
+            return self.target
+        else:
+            return True
 
     def hide(self):
         '''
@@ -244,14 +247,12 @@ class GameState:
             # as long as there are remaining tries
             # if click: reveal tile at this position
             # if revealed tile is not target decrease remaining tries
-            # TODO: prevent player from clicking on a revealed tile
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     quit()
                 if self._remaining_tries:
                     if event.type == pygame.MOUSEBUTTONDOWN:
-                        print('a')
                         pos = pygame.mouse.get_pos()
                         try:
                             if not self._grid.reveal_tile(pos):
