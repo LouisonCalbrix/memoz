@@ -221,6 +221,11 @@ class GameState:
     GameState is the class that encapsulate the game logic. It allows the player
     to interact with a game's grid and display that grid onscreen.
     '''
+    # color used to display infos such as remaining tries, timer, ...
+    COLOR_INFO = (250, 147, 00)
+    # height of the time relatively to the height of the whole screen (in %)
+    TIMER_REL_HEIGHT = 2
+    TIMER_ABS_HEIGHT = 0                  # to be initialized 
 
     def __init__(self, grid_dim, nb_target, time, total_tries, screen):
         self._time = time           # time tiles will be revealed at the beginning
@@ -228,6 +233,7 @@ class GameState:
         self._nb_target = nb_target
         self._tries = total_tries   # number of tries before game over
         self._screen = screen
+        type(self).TIMER_ABS_HEIGHT = self.TIMER_REL_HEIGHT * self._screen.get_height() // 100
         pass
 
     def update(self):
@@ -277,7 +283,7 @@ class GameState:
         Write onscreen how many tries does the player have left.
         '''
         font = pygame.font.Font(None, 55)
-        txt_surf = font.render(str(self._remaining_tries), False, (255, 255, 255))
+        txt_surf = font.render(str(self._remaining_tries), False, self.COLOR_INFO)
         self._screen.blit(txt_surf, (0,0))
 
     def draw_timer(self):
@@ -285,7 +291,11 @@ class GameState:
         Draw onscreen a representation of the time remaining during which
         tiles are all revealed.
         '''
-        pass
+        if self._timer:
+            width = int((self._timer / self._time) * self._screen.get_width()) 
+            rect = pygame.Rect(0, self._screen.get_height()-self.TIMER_ABS_HEIGHT, 
+                               width, self.TIMER_ABS_HEIGHT)
+            pygame.draw.rect(self._screen, self.COLOR_INFO, rect)
     
     def draw_game(self):
         '''
