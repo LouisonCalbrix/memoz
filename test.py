@@ -87,9 +87,10 @@ def game(rows, columns, nb_targets):
     clock = pygame.time.Clock()
     fps = 20
     # game init
-    time  = 2 * fps          # 2 seconds in fps
+    time  = 4 * fps          # 4 seconds in fps
     game = GameState((rows, columns), nb_targets, time, 5, screen)
     game.start_game()
+    print(game._grid)        # cheat mode ON
     while True:
         screen.fill((0, 0, 0))
         game.update()
