@@ -149,6 +149,11 @@ class Grid(object):
     def tiles(self):
         return self._tiles
 
+    @property
+    def points(self):
+        flatten = [tile for row in self.tiles for tile in row if tile.revealed and tile.target]
+        return len(flatten)
+
     def reveal_all(self):
         '''
         Reveal every tile of the grid.
@@ -247,12 +252,15 @@ class GameState:
             # time's up hide all the tiles
             if self._timer == 0:
                 self._grid.hide_all()
+            # NOTE: event queue stays untouched during countdown meaning every
+            #       single event is ignored including pygame.QUIT for instance
 
         # phase 2: player needs to find the good tiles
         else:
             # as long as there are remaining tries
             # if click: reveal tile at this position
             # if revealed tile is not target decrease remaining tries
+            # game over if no tries left or all target tiles have been found
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -263,16 +271,22 @@ class GameState:
                         try:
                             if not self._grid.reveal_tile(pos):
                                 self._remaining_tries -= 1
+                            self._game_over = (not self._remaining_tries or 
+                                               self._grid.points == self._nb_target)
                         # mouse clicked while not over a tile
                         except AttributeError:
                             pass
+
         self.draw_game()     # draw game and relevent informations at every frame
+        if self._game_over:
+            self.start_game()
         pass
 
     def start_game(self):
         '''
         Instanciate Grid, initialize _remaining_tries and timer.
         '''
+        self._game_over = False
         self._remaining_tries = self._tries   # current number of tries (to be decreased)
         self._timer = self._time              # timer (to be decreased) 
         window_size = self._screen.get_size()
