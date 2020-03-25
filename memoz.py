@@ -3,10 +3,10 @@
 # memoz
 # A game where you need to use your short-term memory.
 # The player is shown a grid made of tiles, most of them are blue and some
-# of them are red. The player must remember where the red tiles are because,
+# of them are yellow. The player must remember where the yellow tiles are because,
 # after a while, all the tiles are flipped and it is not possible to see which
-# ones are red and which ones are blue. At that point, the player's goal is to
-# click on the tiles that are red to get points, and since he doesn't have  
+# ones are yellow and which ones are blue. At that point, the player's goal is to
+# click on the tiles that are yellow to get points, and since he doesn't have  
 # unlimited tries he must choose wisely!
 # date: November 2019
 
@@ -234,6 +234,7 @@ class GameState:
 
     def __init__(self, grid_dim, nb_target, time, total_tries, screen):
         self._time = time           # time tiles will be revealed at the beginning
+        self._difficulty = 0
         self._grid_dim = grid_dim   # size of Grid instances 
         self._nb_target = nb_target
         self._tries = total_tries   # number of tries before game over
@@ -269,10 +270,15 @@ class GameState:
                     if event.type == pygame.MOUSEBUTTONDOWN:
                         pos = pygame.mouse.get_pos()
                         try:
-                            if not self._grid.reveal_tile(pos):
+                            if not self._grid.reveal_tile(pos):      # wrong tile!
                                 self._remaining_tries -= 1
-                            self._game_over = (not self._remaining_tries or 
-                                               self._grid.points == self._nb_target)
+
+                            if not self._remaining_tries:            # lost game
+                                self.difficulty -= 1
+                                self._game_over = True               # won game
+                            elif self._grid.points == self.nb_target:
+                                self.difficulty += 1
+                                self._game_over = True
                         # mouse clicked while not over a tile
                         except AttributeError:
                             pass
@@ -290,7 +296,8 @@ class GameState:
         self._remaining_tries = self._tries   # current number of tries (to be decreased)
         self._timer = self._time              # timer (to be decreased) 
         window_size = self._screen.get_size()
-        self._grid = Grid(*self._grid_dim, self._nb_target, window_size)
+        self._grid = Grid(*self.grid_dim, self.nb_target, window_size)
+        print(self._grid, self.difficulty)    # cheat mode ON
 
     def draw_tries(self):
         '''
@@ -319,6 +326,25 @@ class GameState:
         self.draw_tries()
         self._grid.draw(self._screen)
         pass
+
+    @property
+    def nb_target(self):
+        return self._nb_target + self.difficulty // 2
+
+    @property
+    def grid_dim(self):
+        return (dim + self.difficulty // 5 for dim in self._grid_dim)
+
+    @property
+    def difficulty(self):
+        return self._difficulty
+
+    @difficulty.setter
+    def difficulty(self, value):
+        if value < 0:
+            self._difficulty = 0
+        else:
+            self._difficulty = value
 
     # factories
     @classmethod
