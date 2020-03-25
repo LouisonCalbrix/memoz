@@ -90,7 +90,6 @@ def game(rows, columns, nb_targets):
     time  = 2 * fps          # 2 seconds in fps
     game = GameState((rows, columns), nb_targets, time, 5, screen)
     game.start_game()
-    print(game._grid)        # cheat mode ON
     while True:
         screen.fill((0, 0, 0))
         game.update()
@@ -99,4 +98,4 @@ def game(rows, columns, nb_targets):
 
 
 if __name__ == '__main__':
-    game(5, 7, 4)
+    game(3, 4, 2)
