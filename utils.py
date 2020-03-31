@@ -5,6 +5,10 @@
 # date: March 2020
 
 class Singleton(type):
+    '''
+    Singleton metaclass. A Singleton class's only instance can be accessed
+    by name_of_class.INSTANCE
+    '''
     def __init__(self, *args, **kwargs):
         self.INSTANCE = None
         super().__init__(*args, **kwargs)
@@ -28,17 +32,6 @@ class Window(metaclass=Singleton):
     @property
     def main_menu(self):
         return self.queue[0]
-
-    @main_menu.setter
-    def main_menu(self, value):
-        if len(self.queue):
-            raise AttributeError('main menu already set')
-        if not isinstance(value, Scene):
-            raise TypeError('Scene instance expected')
-        if not value.name == 'main menu':
-            raise ValueError("main_menu must have name attribute set to 'main menu'")
-        self.queue.append(value)
-        self._target = 'main menu'
 
     def append(self, scene):
         self.queue.append(scene)
