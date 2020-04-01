@@ -4,37 +4,42 @@
 # logic.
 # date: March 2020
 
-class Singleton(type):
-    '''
-    Singleton metaclass. A Singleton class's only instance can be accessed
-    by name_of_class.INSTANCE
-    '''
-    def __init__(self, *args, **kwargs):
-        self.INSTANCE = None
-        super().__init__(*args, **kwargs)
+from collections.abc import MutableSequence
+from abc import ABC, abstractmethod
 
-    def __call__(self, *args, **kwargs):
-        if self.INSTANCE is None:
-            self.INSTANCE = super().__call__(*args, **kwargs)
-        return self.INSTANCE
+#class Singleton(type):
+#    '''
+#    Singleton metaclass. A Singleton class's only instance can be accessed
+#    by name_of_class.INSTANCE
+#    '''
+#    def __init__(self, *args, **kwargs):
+#        self.INSTANCE = None
+#        super().__init__(*args, **kwargs)
+#
+#    def __call__(self, *args, **kwargs):
+#        if self.INSTANCE is None:
+#            self.INSTANCE = super().__call__(*args, **kwargs)
+#        return self.INSTANCE
 
 
-class Window(metaclass=Singleton):
+class Stage(MutableSequence):
     '''
-    Top level
+    Top level object that manages Scenes and call their update method.
     '''
+
     def __init__(self, **main_menu):
-        if self.INSTANCE:
-            self.INSTANCE = self
-        self.queue = [Scene(**main_menu)]
+        self._scenes = [TextScene(**main_menu)]
         self._target = 'main menu'
+        self._active = True
+        type(self).INSTANCE = self
+
+    def play(self):
+        while self._active:
+            self.current_scene.update()
 
     @property
     def main_menu(self):
-        return self.queue[0]
-
-    def append(self, scene):
-        self.queue.append(scene)
+        return self._scenes[0]
 
     @property
     def target(self):
@@ -44,28 +49,73 @@ class Window(metaclass=Singleton):
     def target(self, value):
         if value == 'quit':
             print('quitting...')
-        if value not in (scene.name for scene in self.queue):
+            self._active = False
+        elif value not in (scene.name for scene in self._scenes):
             raise KeyError('non existing scene')
         self._target = value
 
     @property
     def current_scene(self):
-        for scene in self.queue:
+        for scene in self._scenes:
             if scene.name == self.target:
                 return scene
+
+    def __delitem__(self, index):
+        del self._scenes[index]
+
+    def __getitem__(self, index):
+        return self._scenes[index]
+
+    def __setitem__(self, index, scene):
+        if not isinstance(scene, Scene):
+            raise TypeError('Only instances of subclasses of Scene are accepted')
+        self._scenes[index] = value
+
+    def __len__(self):
+        return len(self._scenes)
+
+    def insert(self, index, scene):
+        if not isinstance(scene, Scene):
+            raise TypeError('Only instances of subclasses of Scene are accepted')
+        self._scenes.insert(index, scene)
 
     def __str__(self):
         return 'current scene:\n{}'.format(self.current_scene)
 
 
-class Scene:
+class Scene(ABC):
     '''
-    Display on the screen.
+    Interface for a logical unit to be displayed on the screen.
     '''
+    @abstractmethod
+    def update(self):
+        '''
+        Method to be called every unit of time during the time the Scene has the
+        focus (e.g. when it's displayed onscreen)
+        '''
+        pass
+
+class TextScene(Scene):
+    '''
+    Text based Scene. It gets printed on the screen once it gets the focus.
+    '''
+
     def __init__(self, name, subtitle):
         self.name = name
         self.subtitle = subtitle
         self.nav = list()
+        self.printed = False
+
+    def update(self):
+        if not self.printed:
+            print(self)
+            self.printed = True
+        user_input = input('choose an option\n')
+        try:
+            self[user_input]()
+            self.printed = False
+        except LookupError as e:
+            print(e)
 
     def add_nav(self, a_nav):
         if not isinstance(a_nav, Navigation):
@@ -98,37 +148,38 @@ class Navigation:
 
     @classmethod
     def init(cls):
-        cls.WINDOW = Window.INSTANCE
+        cls.WINDOW = Stage.INSTANCE
 
 
 #---------------------------------------------------------------------------Demo
 # To test that utility follow these steps:
-#    1 in a python REPL import this script "from utils import *"
-#    2 to see what navigation options you currently have, type:
-#      print(window)
-#    3 to choose an option named nav_opt, type:
-#      window.current_scene['nav_opt']()
+#    1 in a python REPL import this script:
+#      from utils import *
+#    2 a few navigation options are printed on the screen
+#    3 to choose an option type its name
 #    4 repeat steps 2 and 3 to continue navigating through the demo
 
-window = Window(name='main menu', subtitle='MAIN MENU')
+stage = Stage(name='main menu', subtitle='MAIN MENU')
 
 Navigation.init()
 
-window.main_menu.add_nav(Navigation('game'))
-window.main_menu.add_nav(Navigation('high scores'))
-window.main_menu.add_nav(Navigation('quit'))
+stage.main_menu.add_nav(Navigation('game'))
+stage.main_menu.add_nav(Navigation('high scores'))
+stage.main_menu.add_nav(Navigation('quit'))
 
-game = Scene('game', 'THE GAME')
+game = TextScene('game', 'THE GAME')
 game.add_nav(Navigation('pause'))
 
-pause = Scene('pause', 'PAUSED GAME')
+pause = TextScene('pause', 'PAUSED GAME')
 pause.add_nav(Navigation('game'))
 pause.add_nav(Navigation('main menu'))
 pause.add_nav(Navigation('quit'))
 
-hi_scores = Scene('high scores', 'HIGH SCORES')
+hi_scores = TextScene('high scores', 'HIGH SCORES')
 hi_scores.add_nav(Navigation('main menu'))
 
-window.append(game)
-window.append(pause)
-window.append(hi_scores)
+stage.append(game)
+stage.append(pause)
+stage.append(hi_scores)
+
+stage.play()
