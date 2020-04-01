@@ -151,7 +151,8 @@ class Navigation:
         cls.WINDOW = Stage.INSTANCE
 
 
-#---------------------------------------------------------------------------Demo
+# DEMO
+#
 # To test that utility follow these steps:
 #    1 in a python REPL import this script:
 #      from utils import *
@@ -159,27 +160,28 @@ class Navigation:
 #    3 to choose an option type its name
 #    4 repeat steps 2 and 3 to continue navigating through the demo
 
-stage = Stage(name='main menu', subtitle='MAIN MENU')
+if __name__ == '__main__':
+    stage = Stage(name='main menu', subtitle='MAIN MENU')
 
-Navigation.init()
+    Navigation.init()
 
-stage.main_menu.add_nav(Navigation('game'))
-stage.main_menu.add_nav(Navigation('high scores'))
-stage.main_menu.add_nav(Navigation('quit'))
+    stage.main_menu.add_nav(Navigation('game'))
+    stage.main_menu.add_nav(Navigation('high scores'))
+    stage.main_menu.add_nav(Navigation('quit'))
 
-game = TextScene('game', 'THE GAME')
-game.add_nav(Navigation('pause'))
+    game = TextScene('game', 'THE GAME')
+    game.add_nav(Navigation('pause'))
 
-pause = TextScene('pause', 'PAUSED GAME')
-pause.add_nav(Navigation('game'))
-pause.add_nav(Navigation('main menu'))
-pause.add_nav(Navigation('quit'))
+    pause = TextScene('pause', 'PAUSED GAME')
+    pause.add_nav(Navigation('game'))
+    pause.add_nav(Navigation('main menu'))
+    pause.add_nav(Navigation('quit'))
 
-hi_scores = TextScene('high scores', 'HIGH SCORES')
-hi_scores.add_nav(Navigation('main menu'))
+    hi_scores = TextScene('high scores', 'HIGH SCORES')
+    hi_scores.add_nav(Navigation('main menu'))
 
-stage.append(game)
-stage.append(pause)
-stage.append(hi_scores)
+    stage.append(game)
+    stage.append(pause)
+    stage.append(hi_scores)
 
-stage.play()
+    stage.play()
