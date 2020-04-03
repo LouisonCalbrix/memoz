@@ -6,9 +6,12 @@ logic.
 date: March 2020
 '''
 
+import pygame
 from copy import copy
 from collections.abc import MutableSequence
 from abc import ABC, abstractmethod
+
+pygame.init()
 
 #class Singleton(type):
 #    '''
@@ -203,16 +206,101 @@ class Navigation:
         cls.STAGE = Stage.INSTANCE
 
 
-# DEMO
-#
-# To test that utility follow these steps:
-#    1 execute this script with python:
-#      python3 utils.py
-#    2 a few navigation options are printed on the screen
-#    3 to choose an option type its name
-#    4 repeat steps 2 and 3 to continue navigating through the demo
+class Button:
+    '''
+    Graphic element that triggers an action when it's clicked.
+    '''
+    def __init__(self, img, area, action):
+        '''
+        Parameters expected:  
+            img: a pygame Surface that will be displayed onscreen to represent the
+                 button
+            pos: the coordinates (x, y) where the top-left corner of the button 
+                 will be set onscreen
+            area: the area where a click will trigger the button's action
+            action: the piece of code to execute when the button is clicked
+        '''
+        self._img = copy(img)
+#        self._pos = copy(pos)
+        self._area = area
+        self._action = action
 
-if __name__ == '__main__':
+    def click(self):
+        '''
+        Method to be called when the Button is clicked.
+        '''
+        self._action()
+
+    @property
+    def area(self):
+        return self._area
+
+    @property
+    def image(self):
+        return self._img
+
+    @classmethod
+    def fromstring(cls, button_string, action, fontfile=None, size_px=16,
+                   bg_color=(0, 0, 0), size=None):
+        '''
+        Create a Button from a string. This Button will just be the piece of text
+        button_string, written using font set to size_px.
+        '''
+        typeface = pygame.font.Font(fontfile, size_px)
+        font_surface = typeface.render(button_string, True, (255, 255, 255))
+        offset = (0, 0)
+        if size is None:
+            img = pygame.Surface(font_surface.get_size())
+        else:
+            img = pygame.Surface(size)
+            offset = tuple((img_dim-ft_dim)//2 for ft_dim, img_dim in zip(font_surface.get_size(), size))
+        img.fill(bg_color)
+        img.blit(font_surface, offset)
+        area = img.get_size()
+        return cls(img, area, action)
+
+
+# DEMOS
+
+def button_demo():
+    '''
+    Mean to test the Button class. To run demo do the following:
+        1 import this script in your python shell:
+          from utils import *
+        2 call this function:
+          button_demo()
+    '''
+    def zizou():
+        print('oooh zizou')
+    button = Button.fromstring('C L I C K', action=zizou, size=(100, 15), bg_color=(40, 200, 40)) 
+    zone = pygame.Rect((100, 300), button.area)
+    screen = pygame.display.set_mode((700, 700))
+    screen.fill((0, 0, 255))
+    screen.blit(button.image, zone)
+    pygame.display.flip()
+
+    going = True
+    while going:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                going = False
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                pos = pygame.mouse.get_pos()
+                if zone.collidepoint(*pos):
+                    button.click()
+    pygame.quit()
+
+def textscene_demo():
+    '''
+    Meant to test the Stage and TextScene classes. To run demo do the following:
+        1 import this script in your python shell:
+          from utils import *
+        2 call this function:
+          textscene_demo()
+        3 a few navigation options are printed on the screen, choose one by
+          typing its name.
+        4 repeat steps 2 and 3 to continue navigating the demo
+    '''
     stage = Stage(name='main menu', subtitle='MAIN MENU')
 
     Navigation.init()
@@ -237,3 +325,6 @@ if __name__ == '__main__':
     stage.append(hi_scores)
 
     stage.play()
+
+if __name__ == '__main__':
+    pass
