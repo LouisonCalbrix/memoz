@@ -12,7 +12,6 @@ from collections.abc import MutableMapping
 from collections import namedtuple
 from abc import ABC, abstractmethod
 
-pygame.init()
 
 #class Singleton(type):
 #    '''
@@ -34,11 +33,17 @@ class Stage(MutableMapping):
     Top level object that manages Scenes and call their update method.
     '''
 
-    def __init__(self, **main_menu):
+    def __init__(self):
         '''
         A Stage needs a Scene as early as instanciation, therefore it expects
         keyword arguments to instanciate TextScene. 
         '''
+        # pygame init
+        pygame.init()
+        self.screen = pygame.display.set_mode((700, 700))      # placeholder size
+#        self.screen.fill((0, 0, 255))                          # placeholder fill
+
+        # scenes initialization
         self._scenes = {}
         self._target = 'main menu'
         self._active = True
@@ -52,6 +57,8 @@ class Stage(MutableMapping):
         while self._active:
             inputs = pygame.event.get()
             self.current_scene.update(inputs)
+            pygame.display.update()
+        pygame.quit()
 
     def nav_link(self, target):
         '''
@@ -80,6 +87,7 @@ class Stage(MutableMapping):
         if value == 'quit':
             print('quitting...')
             self._active = False
+            return
         elif value not in self:
             raise KeyError('non existing scene')
         self._target = value
@@ -99,7 +107,7 @@ class Stage(MutableMapping):
     def __setitem__(self, key, scene):
         if not isinstance(scene, Scene):
             raise TypeError('Only instances of subclasses of Scene are accepted')
-        self._scenes[key] = value
+        self._scenes[key] = scene
 
     def __delitem__(self, key):
         del self._scenes[key]
@@ -132,64 +140,12 @@ class Scene(ABC):
         '''
         pass
 
-# Text based example of Scene subclass
-class TextScene(Scene):
-    '''
-    Text based Scene. It gets printed on the screen once it gets the focus.
-    '''
-
-    def __init__(self, name, subtitle):
-        '''
-        Expect name to be a string internally identifying the Scene,
-        and subtitle to be another string to display onscreen to the user.
-        '''
-        self.name = name
-        self.subtitle = subtitle
-        self.nav = list()
-        self.printed = False
-
-    def update(self):
-        if not self.printed:
-            print(self)
-            self.printed = True
-        user_input = input('choose an option\n')
-        try:
-            self[user_input]()
-            self.printed = False
-        except LookupError as e:
-            print(e)
-
-    def add_nav(self, a_nav):
-        '''
-        Add a Navigation option to the Scene.
-        '''
-        if not isinstance(a_nav, Navigation):
-            raise TypeError('Navigation instance expected')
-        self.nav.append(a_nav)
-
-    def __str__(self):
-        '''
-        Return a string representing both the Scene and its navigation options.
-        '''
-        nav_display = ('---'+str(navigation) for navigation in self.nav)
-        return '\n'.join((self.subtitle, *nav_display))
-
-    def __getitem__(self, subscript):
-        '''
-        Get an item whose attribute target_name is equal to subscript. This is how
-        to retrieve Navigation instances contained in the nav attribute. 
-        '''
-        for a_nav in self.nav:
-            if a_nav.target_name == subscript:
-                return a_nav
-        raise KeyError('no such Navigation option')
-
 
 class GraphicalScene(Scene):
     '''
     A Scene that can be displayed on screen and that is not just plain text.
     '''
-    FixedButton = collections.namedtuple('FixedButton', 'zone button')
+    FixedButton = namedtuple('FixedButton', 'zone button')
 
     def __init__(self, screen, img=None):
         '''
@@ -213,13 +169,13 @@ class GraphicalScene(Scene):
     def update(self, events):
         for event in events:
             if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
+                Stage.INSTANCE.nav_link('quit')()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()
                 for zone, button in self._buttons:
                     if zone.collidepoint(*pos):
                         button.click()
+        self.draw()
 
     def add_button_at(self, button, pos):
         '''
@@ -228,8 +184,8 @@ class GraphicalScene(Scene):
         if not isinstance(button, Button):
             raise TypeError('Button instance expected')
         zone = pygame.Rect(pos, button.area)
-        self._buttons.append(FixedButton(zone, button))
-        self._widget_img.blit(button.img, pos)
+        self._buttons.append(self.FixedButton(zone, button))
+        self._widgets_img.blit(button.img, pos)
 
     def draw(self):
         '''
@@ -268,7 +224,7 @@ class Button:
         return self._area
 
     @property
-    def image(self):
+    def img(self):
         return self._img
 
     @classmethod
@@ -296,7 +252,7 @@ class Button:
 
 def button_demo():
     '''
-    Mean to test the Button class. To run demo do the following:
+    Meant to test the Button class. To run this demo do the following:
         1 import this script in your python shell:
           from utils import *
         2 call this function:
@@ -306,9 +262,10 @@ def button_demo():
         print('oooh zizou')
     button = Button.fromstring('C L I C K', action=zizou, size=(100, 15), bg_color=(40, 200, 40)) 
     zone = pygame.Rect((100, 300), button.area)
+
     screen = pygame.display.set_mode((700, 700))
     screen.fill((0, 0, 255))
-    screen.blit(button.image, zone)
+    screen.blit(button.img, zone)
     pygame.display.flip()
 
     going = True
@@ -322,41 +279,40 @@ def button_demo():
                     button.click()
     pygame.quit()
 
-def textscene_demo():
+def stage_demo():
     '''
-    Meant to test the Stage and TextScene classes. To run demo do the following:
+    Meant to test the Stage and GraphicalScene classes. To run this demo, 
+    do the following:
         1 import this script in your python shell:
           from utils import *
         2 call this function:
-          textscene_demo()
-        3 a few navigation options are printed on the screen, choose one by
-          typing its name.
-        4 repeat steps 2 and 3 to continue navigating the demo
+          stage_demo()
+        3 click on the buttons to go from one scene to another
     '''
-    stage = Stage(name='main menu', subtitle='MAIN MENU')
+    stage = Stage()
+    screen = stage.screen
 
-    Navigation.init()
+    main_img = pygame.Surface((700, 700))
+    main_img.fill((125, 125, 125))
+    main_img.blit(pygame.font.Font(None, 55).render('SCREEN 1', False, (0, 0, 0)),
+                  (50, 50))
+    main_menu = GraphicalScene(screen, img=main_img)
+    button1 = Button.fromstring('goto 2', action=stage.nav_link('screen2'), 
+                                size=(100, 30))
+    main_menu.add_button_at(button1, (15, 600))
+    stage['main menu'] = main_menu
 
-    stage.main_menu.add_nav(Navigation('game'))
-    stage.main_menu.add_nav(Navigation('high scores'))
-    stage.main_menu.add_nav(Navigation('quit'))
-
-    game = TextScene('game', 'THE GAME')
-    game.add_nav(Navigation('pause'))
-
-    pause = TextScene('pause', 'PAUSED GAME')
-    pause.add_nav(Navigation('game'))
-    pause.add_nav(Navigation('main menu'))
-    pause.add_nav(Navigation('quit'))
-
-    hi_scores = TextScene('high scores', 'HIGH SCORES')
-    hi_scores.add_nav(Navigation('main menu'))
-
-    stage.append(game)
-    stage.append(pause)
-    stage.append(hi_scores)
+    main_img.fill((240, 140, 0))
+    main_img.blit(pygame.font.Font(None, 55).render('SCREEN 2', False, (0, 0, 0)),
+                  (50, 50))
+    scene2 = GraphicalScene(screen, img=main_img)
+    button2 = Button.fromstring('backto 1', action=stage.nav_link('main menu'),
+                                size=(100, 30))
+    scene2.add_button_at(button2, (15, 600))
+    stage['screen2'] = scene2
 
     stage.play()
 
 if __name__ == '__main__':
+    stage_demo()
     pass
