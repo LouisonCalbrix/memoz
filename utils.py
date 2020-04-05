@@ -8,7 +8,8 @@ date: March 2020
 
 import pygame
 from copy import copy
-from collections.abc import MutableSequence
+from collections.abc import MutableMapping
+from collections import namedtuple
 from abc import ABC, abstractmethod
 
 pygame.init()
@@ -28,7 +29,7 @@ pygame.init()
 #        return self.INSTANCE
 
 
-class Stage(MutableSequence):
+class Stage(MutableMapping):
     '''
     Top level object that manages Scenes and call their update method.
     '''
@@ -38,25 +39,34 @@ class Stage(MutableSequence):
         A Stage needs a Scene as early as instanciation, therefore it expects
         keyword arguments to instanciate TextScene. 
         '''
-        self._scenes = [TextScene(**main_menu)]
+        self._scenes = {}
         self._target = 'main menu'
         self._active = True
         type(self).INSTANCE = self
 
     def play(self):
         '''
-        The real main loop of the program, it's body changes as the Scene being
+        The real main loop of the program, its body changes as the Scene being
         played is changed.
         '''
         while self._active:
-            self.current_scene.update()
+            inputs = pygame.event.get()
+            self.current_scene.update(inputs)
+
+    def nav_link(self, target):
+        '''
+        Return a function that changes the target of the Stage.
+        '''
+        def link():
+            self.target = target
+        return link
 
     @property
     def main_menu(self):
         '''
-        Return the first Scene which is the entry point of the interactive program.
+        Return the main menu Scene which is the entry point of the program.
         '''
-        return self._scenes[0]
+        return self._scenes['main menu']
 
     @property
     def target(self):
@@ -70,7 +80,7 @@ class Stage(MutableSequence):
         if value == 'quit':
             print('quitting...')
             self._active = False
-        elif value not in (scene.name for scene in self._scenes):
+        elif value not in self:
             raise KeyError('non existing scene')
         self._target = value
 
@@ -79,34 +89,31 @@ class Stage(MutableSequence):
         '''
         Scene being played.
         '''
-        for scene in self._scenes:
-            if scene.name == self.target:
-                return scene
+        return self._scenes[self.target]
 
-    # ----Implementation of MutableSequence interface
+    # ----Implementation of MutableMapping interface
 
-    def __delitem__(self, index):
-        del self._scenes[index]
+    def __getitem__(self, key):
+        return self._scenes[key]
 
-    def __getitem__(self, index):
-        return self._scenes[index]
-
-    def __setitem__(self, index, scene):
+    def __setitem__(self, key, scene):
         if not isinstance(scene, Scene):
             raise TypeError('Only instances of subclasses of Scene are accepted')
-        self._scenes[index] = value
+        self._scenes[key] = value
+
+    def __delitem__(self, key):
+        del self._scenes[key]
 
     def __len__(self):
         return len(self._scenes)
 
-    def insert(self, index, scene):
-        if not isinstance(scene, Scene):
-            raise TypeError('Only instances of subclasses of Scene are accepted')
-        self._scenes.insert(index, scene)
+    def __iter__(self):
+        yield from self._scenes
+
     # ----
 
     def __str__(self):
-        return 'current scene:\n{}'.format(self.current_scene)
+        return '\n'.join((self.current_scene, *self._scenes))
 
 
 class Scene(ABC):
@@ -178,32 +185,58 @@ class TextScene(Scene):
         raise KeyError('no such Navigation option')
 
 
-class Navigation:
+class GraphicalScene(Scene):
     '''
-    Callable object allowing a change of Scene when it's called.
+    A Scene that can be displayed on screen and that is not just plain text.
     '''
-    def __init__(self, target_name):
-        '''
-        Expect a string representing the name of an existing (or soon to be
-        instanciated) Scene.
-        '''
-        self.target_name = target_name
+    FixedButton = collections.namedtuple('FixedButton', 'zone button')
 
-    def __call__(self):
+    def __init__(self, screen, img=None):
         '''
-        Change the Scene being played by the Stage instance.
+        Expect name to be a string internally identifying the Scene,
+        and subtitle to be another string to display onscreen to the user.
         '''
-        self.STAGE.target = self.target_name
+        # Surface on which graphics are to be drawn
+        self._screen = screen
+        # graphics
+        if img == None:
+            self._img = pygame.Surface((700, 700))
+            self._img.fill((0, 255, 80))
+        else:
+            self._img = copy(img)
+        self._widgets_img = pygame.Surface((700, 700))
+        self._widgets_img.set_colorkey((0, 255, 0))
+        self._widgets_img.fill((0, 255, 0))
+        # buttons
+        self._buttons = list()
 
-    def __str__(self):
-        return self.target_name
+    def update(self, events):
+        for event in events:
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                pos = pygame.mouse.get_pos()
+                for zone, button in self._buttons:
+                    if zone.collidepoint(*pos):
+                        button.click()
 
-    @classmethod
-    def init(cls):
+    def add_button_at(self, button, pos):
         '''
-        Initialize class shared data.
+        Add a Button to the Scene.
         '''
-        cls.STAGE = Stage.INSTANCE
+        if not isinstance(button, Button):
+            raise TypeError('Button instance expected')
+        zone = pygame.Rect(pos, button.area)
+        self._buttons.append(FixedButton(zone, button))
+        self._widget_img.blit(button.img, pos)
+
+    def draw(self):
+        '''
+        Draw the Scene onscreen
+        '''
+        self._screen.blit(self._img, (0, 0))
+        self._screen.blit(self._widgets_img, (0, 0))
 
 
 class Button:
@@ -221,7 +254,6 @@ class Button:
             action: the piece of code to execute when the button is clicked
         '''
         self._img = copy(img)
-#        self._pos = copy(pos)
         self._area = area
         self._action = action
 
