@@ -33,7 +33,7 @@ class Stage(MutableMapping):
     Top level object that manages Scenes and call their update method.
     '''
 
-    def __init__(self):
+    def __init__(self, fps):
         '''
         A Stage needs a Scene as early as instanciation, therefore it expects
         keyword arguments to instanciate TextScene. 
@@ -41,6 +41,8 @@ class Stage(MutableMapping):
         # pygame init
         pygame.init()
         self.screen = pygame.display.set_mode((700, 700))      # placeholder size
+        self._clock = pygame.time.Clock()
+        self._fps = fps
 #        self.screen.fill((0, 0, 255))                          # placeholder fill
 
         # scenes initialization
@@ -58,6 +60,7 @@ class Stage(MutableMapping):
             inputs = pygame.event.get()
             self.current_scene.update(inputs)
             pygame.display.update()
+            self._clock.tick(self._fps)
         pygame.quit()
 
     def nav_link(self, target):
@@ -318,7 +321,7 @@ def stage_demo():
             self._widgets_img.blit(button.img, pos)
 
 
-    stage = Stage()
+    stage = Stage(20)
     screen = stage.screen
 
     main_img = pygame.Surface((700, 700))
