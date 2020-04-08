@@ -43,7 +43,6 @@ class Stage(MutableMapping):
         self.screen = pygame.display.set_mode((700, 700))      # placeholder size
         self._clock = pygame.time.Clock()
         self._fps = fps
-#        self.screen.fill((0, 0, 255))                          # placeholder fill
 
         # scenes initialization
         self._scenes = {}
@@ -58,9 +57,23 @@ class Stage(MutableMapping):
         '''
         while self._active:
             inputs = pygame.event.get()
-            self.current_scene.update(inputs)
+            scene_inputs = []
+            for an_input in inputs:
+                if an_input.type == pygame.QUIT:
+                    self._active = False
+                else:
+                    scene_inputs.append(an_input)
+            self.current_scene.update(scene_inputs)
             pygame.display.update()
             self._clock.tick(self._fps)
+        self.quit()
+
+    def quit(self):
+        '''
+        This method is called when the Stage is no longer active and the program
+        is closing. Re implement this method to get custom behavior when closing
+        your program like for instance saving user data.
+        '''
         pygame.quit()
 
     def nav_link(self, target):
@@ -149,19 +162,15 @@ class Scene(ABC):
         Method to be called repeatedly by the managing Stage instance. It will
         temporarily constitute the body of the program's main loop.
         '''
-        for an_input in inputs:
-            if an_input.type == pygame.QUIT:
-                Stage.INSTANCE.target = 'quit'
-            else:
-                self.treat_event(an_input)
+        self.handle_inputs(inputs)
         self.draw()
 
     @abstractmethod
-    def treat_event(self, event):
+    def handle_inputs(self, inputs):
         '''
         Method that needs to be implemented by subclasses to define how they handle
-        user events. It is supposed to treat events one at a time, i.e. its
-        parameter event is supposed to be a single event.
+        user events. It is supposed to treat a list of inputs, i.e. its parameter 
+        inputs is a list of all the pygame events except pygame.QUIT.
         '''
         pass
 
@@ -294,12 +303,13 @@ def stage_demo():
 
         # Implementation of mandatory Scene methods
 
-        def treat_event(self, event):
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                pos = pygame.mouse.get_pos()
-                for zone, button in self._buttons:
-                    if zone.collidepoint(*pos):
-                        button.click()
+        def handle_inputs(self, inputs):
+            for an_input in inputs:
+                if an_input.type == pygame.MOUSEBUTTONDOWN:
+                    pos = pygame.mouse.get_pos()
+                    for zone, button in self._buttons:
+                        if zone.collidepoint(*pos):
+                            button.click()
 
         def draw(self):
             '''
