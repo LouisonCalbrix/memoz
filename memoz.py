@@ -11,6 +11,7 @@
 # date: November 2019
 
 import pygame
+import utils
 from random import sample
 
 #constants
@@ -221,83 +222,73 @@ class Grid(object):
 
         return res
 
-class GameState:
+class GameScene(utils.Scene):
     '''
-    GameState is the class that encapsulate the game logic. It allows the player
+    GameScene is the class that encapsulate the game logic. It allows the player
     to interact with a game's grid and display that grid onscreen.
     '''
     # color used to display infos such as remaining tries, timer, ...
     COLOR_INFO = (250, 147, 00)
+    COLOR_BLACK = (0, 0, 0)
     # height of the time relatively to the height of the whole screen (in %)
     TIMER_REL_HEIGHT = 2
     TIMER_ABS_HEIGHT = 0                  # to be initialized 
 
-    def __init__(self, grid_dim, nb_target, time, total_tries, screen):
+    def __init__(self, screen, grid_dim=(2, 2), nb_target=2, time=2, total_tries=3):
+        super().__init__(screen)
         self._time = time           # time tiles will be revealed at the beginning
         self._difficulty = 0
         self._grid_dim = grid_dim   # size of Grid instances 
         self._nb_target = nb_target
         self._tries = total_tries   # number of tries before game over
-        self._screen = screen
         type(self).TIMER_ABS_HEIGHT = self.TIMER_REL_HEIGHT * self._screen.get_height() // 100
-        pass
 
-    def update(self):
-        '''
-        Method called once per frame, update every game component according to
-        the user's input and time.
-        '''
+    # Implementation of Scene abstract methods
+
+    def handle_inputs(self, inputs):
         # phase 1: reveal tiles until timer is 0
         if self._timer:
             self._timer -= 1
             # time's up hide all the tiles
             if self._timer == 0:
                 self._grid.hide_all()
-            # NOTE: event queue stays untouched during countdown meaning every
-            #       single event is ignored including pygame.QUIT for instance
 
         # phase 2: player needs to find the good tiles
         else:
-            # as long as there are remaining tries
-            # if click: reveal tile at this position
-            # if revealed tile is not target decrease remaining tries
-            # game over if no tries left or all target tiles have been found
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    quit()
-                if self._remaining_tries:
-                    if event.type == pygame.MOUSEBUTTONDOWN:
-                        pos = pygame.mouse.get_pos()
-                        try:
-                            if not self._grid.reveal_tile(pos):      # wrong tile!
-                                self._remaining_tries -= 1
+            for an_input in inputs:
+                # as long as there are remaining tries
+                # if click: reveal tile at this position
+                # if revealed tile is not target decrease remaining tries
+                # game over if no tries left or all target tiles have been found
+                if an_input.type == pygame.MOUSEBUTTONDOWN:
+                    pos = pygame.mouse.get_pos()
+                    try:
+                        if not self._grid.reveal_tile(pos):        # wrong tile!
+                            self._remaining_tries -= 1
 
-                            if not self._remaining_tries:            # lost game
-                                self.difficulty -= 1
-                                self._game_over = True               # won game
-                            elif self._grid.points == self.nb_target:
-                                self.difficulty += 1
-                                self._game_over = True
-                        # mouse clicked while not over a tile
-                        except AttributeError:
-                            pass
-
-        self.draw_game()     # draw game and relevent informations at every frame
+                        if not self._remaining_tries:              # lost game
+                            self.difficulty -= 1
+                            self._game_over = True               
+                        elif self._grid.points == self.nb_target:  # won game
+                            self.difficulty += 1
+                            self._game_over = True
+                    # mouse clicked while not over a tile
+                    except AttributeError:
+                        pass
+        # start new game
         if self._game_over:
             self.start_game()
-        pass
 
-    def start_game(self):
+    def draw(self):
         '''
-        Instanciate Grid, initialize _remaining_tries and timer.
+        Draw grid, remaining tries, timer(, points?)
         '''
-        self._game_over = False
-        self._remaining_tries = self._tries   # current number of tries (to be decreased)
-        self._timer = self._time              # timer (to be decreased) 
-        window_size = self._screen.get_size()
-        self._grid = Grid(*self.grid_dim, self.nb_target, window_size)
-        print(self._grid, self.difficulty)    # cheat mode ON
+        self._screen.fill(self.COLOR_BLACK)
+        self.draw_timer()
+        self.draw_tries()
+        self._grid.draw(self._screen)
+
+    # Drawing sub-methods
 
     def draw_tries(self):
         '''
@@ -318,14 +309,19 @@ class GameState:
                                width, self.TIMER_ABS_HEIGHT)
             pygame.draw.rect(self._screen, self.COLOR_INFO, rect)
     
-    def draw_game(self):
+    # Own functionnalities
+
+    def start_game(self):
         '''
-        Draw grid, remaining tries, timer(, points?)
+        Instanciate Grid, initialize _remaining_tries and timer.
         '''
-        self.draw_timer()
-        self.draw_tries()
-        self._grid.draw(self._screen)
-        pass
+        self._game_over = False
+        self._remaining_tries = self._tries   # current number of tries (to be decreased)
+        self._timer = self._time              # timer (to be decreased) 
+        window_size = self._screen.get_size()
+        self._grid = Grid(*self.grid_dim, self.nb_target, window_size)
+        print(self._grid, self.difficulty)    # cheat mode ON
+
 
     @property
     def nb_target(self):
