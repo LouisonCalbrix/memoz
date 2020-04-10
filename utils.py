@@ -236,6 +236,58 @@ class Button:
         return cls(img, area, action)
 
 
+class Menu(Scene):
+    '''
+    Example of how to subclass Scene.
+    '''
+    FixedButton = namedtuple('FixedButton', 'zone button')
+
+    def __init__(self, screen, img=None):
+        # call to __init__ method from superclass Scene
+        super().__init__(screen)
+
+        # custom things done by this particular class
+        # graphics
+        if img == None:
+            self._img = pygame.Surface(screen.get_size())
+            self._img.fill((0, 255, 80))
+        else:
+            self._img = copy(img)
+        self._widgets_img = pygame.Surface((700, 700))
+        self._widgets_img.set_colorkey((0, 255, 0))
+        self._widgets_img.fill((0, 255, 0))
+        self._buttons = list()
+
+    # Implementation of mandatory Scene methods
+
+    def handle_inputs(self, inputs):
+        for an_input in inputs:
+            if an_input.type == pygame.MOUSEBUTTONDOWN:
+                pos = pygame.mouse.get_pos()
+                for zone, button in self._buttons:
+                    if zone.collidepoint(*pos):
+                        button.click()
+
+    def draw(self):
+        '''
+        Draw the Scene onscreen
+        '''
+        self._screen.blit(self._img, (0, 0))
+        self._screen.blit(self._widgets_img, (0, 0))
+
+    # Added functionnality
+
+    def add_button_at(self, button, pos):
+        '''
+        Add a Button to the Scene.
+        '''
+        if not isinstance(button, Button):
+            raise TypeError('Button instance expected')
+        zone = pygame.Rect(pos, button.area)
+        self._buttons.append(self.FixedButton(zone, button))
+        self._widgets_img.blit(button.img, pos)
+
+
 # DEMOS
 
 def button_demo():
@@ -269,7 +321,7 @@ def button_demo():
 
 def stage_demo():
     '''
-    Meant to test the Stage and TestMenu classes. To run this demo, 
+    Meant to test the Stage and Menu classes. To run this demo, 
     do the following:
         1 import this script in your python shell:
           from utils import *
@@ -279,58 +331,6 @@ def stage_demo():
     '''
 
 
-    class TestMenu(Scene):
-        '''
-        Example of how to subclass Scene.
-        '''
-        FixedButton = namedtuple('FixedButton', 'zone button')
-
-        def __init__(self, screen, img=None):
-            # call to __init__ method from superclass Scene
-            super().__init__(screen)
-
-            # custom things done by this particular class
-            # graphics
-            if img == None:
-                self._img = pygame.Surface((700, 700))
-                self._img.fill((0, 255, 80))
-            else:
-                self._img = copy(img)
-            self._widgets_img = pygame.Surface((700, 700))
-            self._widgets_img.set_colorkey((0, 255, 0))
-            self._widgets_img.fill((0, 255, 0))
-            self._buttons = list()
-
-        # Implementation of mandatory Scene methods
-
-        def handle_inputs(self, inputs):
-            for an_input in inputs:
-                if an_input.type == pygame.MOUSEBUTTONDOWN:
-                    pos = pygame.mouse.get_pos()
-                    for zone, button in self._buttons:
-                        if zone.collidepoint(*pos):
-                            button.click()
-
-        def draw(self):
-            '''
-            Draw the Scene onscreen
-            '''
-            self._screen.blit(self._img, (0, 0))
-            self._screen.blit(self._widgets_img, (0, 0))
-
-        # Added functionnality
-
-        def add_button_at(self, button, pos):
-            '''
-            Add a Button to the Scene.
-            '''
-            if not isinstance(button, Button):
-                raise TypeError('Button instance expected')
-            zone = pygame.Rect(pos, button.area)
-            self._buttons.append(self.FixedButton(zone, button))
-            self._widgets_img.blit(button.img, pos)
-
-
     stage = Stage(20)
     screen = stage.screen
 
@@ -338,7 +338,7 @@ def stage_demo():
     main_img.fill((125, 125, 125))
     main_img.blit(pygame.font.Font(None, 55).render('SCREEN 1', False, (0, 0, 0)),
                   (50, 50))
-    main_menu = TestMenu(screen, img=main_img)
+    main_menu = Menu(screen, img=main_img)
     button1 = Button.fromstring('goto 2', action=stage.nav_link('screen2'), 
                                 size=(100, 30))
     main_menu.add_button_at(button1, (15, 600))
@@ -347,7 +347,7 @@ def stage_demo():
     main_img.fill((240, 140, 0))
     main_img.blit(pygame.font.Font(None, 55).render('SCREEN 2', False, (0, 0, 0)),
                   (50, 50))
-    scene2 = TestMenu(screen, img=main_img)
+    scene2 = Menu(screen, img=main_img)
     button2 = Button.fromstring('backto 1', action=stage.nav_link('main menu'),
                                 size=(100, 30))
     scene2.add_button_at(button2, (15, 600))
