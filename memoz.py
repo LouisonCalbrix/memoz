@@ -241,11 +241,15 @@ class GameScene(utils.Scene):
         self._grid_dim = grid_dim   # size of Grid instances 
         self._nb_target = nb_target
         self._tries = total_tries   # number of tries before game over
+        self._game_over = True
         type(self).TIMER_ABS_HEIGHT = self.TIMER_REL_HEIGHT * self._screen.get_height() // 100
 
     # Implementation of Scene abstract methods
 
     def handle_inputs(self, inputs):
+        # start new game
+        if self._game_over:
+            self.start_game()
         # phase 1: reveal tiles until timer is 0
         if self._timer:
             self._timer -= 1
@@ -275,9 +279,6 @@ class GameScene(utils.Scene):
                     # mouse clicked while not over a tile
                     except AttributeError:
                         pass
-        # start new game
-        if self._game_over:
-            self.start_game()
 
     def draw(self):
         '''
