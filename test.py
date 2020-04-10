@@ -5,6 +5,7 @@
 # to ensure its proper functionning. 
 
 import pygame
+from utils import Stage, Menu, Button
 from memoz import *
 
 def tile_display():
@@ -79,23 +80,30 @@ def grid_display(rows, columns, nb_targets):
         pygame.display.flip()
         clock.tick(fps)
 
-def game(rows, columns, nb_targets):
-    window_size = (450, 700)
-    # pygame init
-    pygame.init()
-    screen = pygame.display.set_mode(window_size)
-    clock = pygame.time.Clock()
-    fps = 20
-    # game init
-    time  = 2 * fps          # 2 seconds in fps
-    game = GameState((rows, columns), nb_targets, time, 5, screen)
-    game.start_game()
-    while True:
-        screen.fill((0, 0, 0))
-        game.update()
-        pygame.display.flip()
-        clock.tick(fps)
+def stage_game(rows, columns, nb_target):
+    fps = 30
+    stage = Stage(fps)
 
+    main_img = pygame.Surface(stage.screen.get_size())
+    main_img.fill((0, 0, 0))
+    main_img.blit(pygame.font.Font(None, 100).render('M E M O Z', True, GameScene.COLOR_INFO),
+                  (50, 50))
+    main_menu = Menu(stage.screen, img=main_img)
+    play_button = Button.fromstring('Play', action=stage.nav_link('game'), 
+                                    size_px=52, size=(150, 50), 
+                                    bg_color=GameScene.COLOR_INFO)
+    main_menu.add_button_at(play_button, (100, 350))
+    quit_button = Button.fromstring('Quit', action=stage.nav_link('quit'),
+                                    size_px=52, size=(150, 50), 
+                                    bg_color=GameScene.COLOR_INFO)
+    main_menu.add_button_at(quit_button, (100, 450))
+    stage['main menu'] = main_menu
+
+    time = 2 * fps
+    game = GameScene(stage.screen, grid_dim=(rows, columns), nb_target=nb_target,
+                     time=time, total_tries=5)
+    stage['game'] = game
+    stage.play()
 
 if __name__ == '__main__':
-    game(3, 4, 2)
+    stage_game(3, 4, 2)
