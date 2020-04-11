@@ -13,6 +13,7 @@
 import pygame
 import utils
 from random import sample
+from config import *
 
 #constants
 SIDE_TILE = 40
@@ -28,9 +29,9 @@ class Tile:
     and a non target one, when _revealed is False all the Tiles look the same.
     '''
 
-    IMG_HIDDEN = pygame.image.load('resources/hidden-tile.png')
-    IMG_TARGET = pygame.image.load('resources/right-tile.png')
-    IMG_WRONG = pygame.image.load('resources/wrong-tile.png')
+    IMG_HIDDEN = pygame.image.load(PATH_TILE_HIDDEN)
+    IMG_TARGET = pygame.image.load(PATH_TILE_TARGET)
+    IMG_WRONG = pygame.image.load(PATH_TILE_WRONG)
 
 
     def __init__(self, target, revealed):
@@ -227,9 +228,6 @@ class GameScene(utils.Scene):
     GameScene is the class that encapsulate the game logic. It allows the player
     to interact with a game's grid and display that grid onscreen.
     '''
-    # color used to display infos such as remaining tries, timer, ...
-    COLOR_INFO = (250, 147, 00)
-    COLOR_BLACK = (0, 0, 0)
     # height of the time relatively to the height of the whole screen (in %)
     TIMER_REL_HEIGHT = 2
     TIMER_ABS_HEIGHT = 0                  # to be initialized 
@@ -284,7 +282,7 @@ class GameScene(utils.Scene):
         '''
         Draw grid, remaining tries, timer(, points?)
         '''
-        self._screen.fill(self.COLOR_BLACK)
+        self._screen.fill(COLOR_BLACK)
         self.draw_timer()
         self.draw_tries()
         self._grid.draw(self._screen)
@@ -296,7 +294,7 @@ class GameScene(utils.Scene):
         Write onscreen how many tries does the player have left.
         '''
         font = pygame.font.Font(None, 55)
-        txt_surf = font.render(str(self._remaining_tries), False, self.COLOR_INFO)
+        txt_surf = font.render(str(self._remaining_tries), False, COLOR_ORANGE)
         self._screen.blit(txt_surf, (0,0))
 
     def draw_timer(self):
@@ -308,7 +306,7 @@ class GameScene(utils.Scene):
             width = int((self._timer / self._time) * self._screen.get_width()) 
             rect = pygame.Rect(0, self._screen.get_height()-self.TIMER_ABS_HEIGHT, 
                                width, self.TIMER_ABS_HEIGHT)
-            pygame.draw.rect(self._screen, self.COLOR_INFO, rect)
+            pygame.draw.rect(self._screen, COLOR_ORANGE, rect)
     
     # Own functionnalities
 

@@ -7,46 +7,34 @@ date: March 2020
 '''
 
 import pygame
+from config import *
 from copy import copy
 from collections.abc import MutableMapping
 from collections import namedtuple
 from abc import ABC, abstractmethod
 
 
-#class Singleton(type):
-#    '''
-#    Singleton metaclass. A Singleton class's only instance can be accessed
-#    by name_of_class.INSTANCE
-#    '''
-#    def __init__(self, *args, **kwargs):
-#        self.INSTANCE = None
-#        super().__init__(*args, **kwargs)
-#
-#    def __call__(self, *args, **kwargs):
-#        if self.INSTANCE is None:
-#            self.INSTANCE = super().__call__(*args, **kwargs)
-#        return self.INSTANCE
-
-
 class Stage(MutableMapping):
     '''
     Top level object that manages Scenes and call their update method.
     '''
+    QUIT = 'quit'
+    MAIN = 'main menu'
 
-    def __init__(self, fps):
+    def __init__(self, size, fps):
         '''
         A Stage needs a Scene as early as instanciation, therefore it expects
         keyword arguments to instanciate TextScene. 
         '''
         # pygame init
         pygame.init()
-        self.screen = pygame.display.set_mode((700, 700))      # placeholder size
+        self.screen = pygame.display.set_mode(size)
         self._clock = pygame.time.Clock()
         self._fps = fps
 
         # scenes initialization
         self._scenes = {}
-        self._target = 'main menu'
+        self._target = self.MAIN
         self._active = True
         type(self).INSTANCE = self
 
@@ -100,8 +88,7 @@ class Stage(MutableMapping):
 
     @target.setter
     def target(self, value):
-        if value == 'quit':
-            print('quitting...')
+        if value == self.QUIT:
             self._active = False
             return
         elif value not in self:
@@ -217,13 +204,13 @@ class Button:
 
     @classmethod
     def fromstring(cls, button_string, action, fontfile=None, size_px=16,
-                   bg_color=(0, 0, 0), size=None):
+                   font_color=COLOR_WHITE, bg_color=COLOR_BLACK, size=None):
         '''
         Create a Button from a string. This Button will just be the piece of text
         button_string, written using font set to size_px.
         '''
         typeface = pygame.font.Font(fontfile, size_px)
-        font_surface = typeface.render(button_string, True, (255, 255, 255))
+        font_surface = typeface.render(button_string, True, font_color)
         offset = (0, 0)
         if size is None:
             img = pygame.Surface(font_surface.get_size())
@@ -250,12 +237,16 @@ class Menu(Scene):
         # graphics
         if img == None:
             self._img = pygame.Surface(screen.get_size())
+
+            # CHECK FOR ANOTHER OCCURENCE OF COLOR (0, 255, 80)
+
             self._img.fill((0, 255, 80))
+
         else:
             self._img = copy(img)
-        self._widgets_img = pygame.Surface((700, 700))
-        self._widgets_img.set_colorkey((0, 255, 0))
-        self._widgets_img.fill((0, 255, 0))
+        self._widgets_img = pygame.Surface(STAGE_SIZE)
+        self._widgets_img.set_colorkey(COLOR_GREEN)
+        self._widgets_img.fill(COLOR_GREEN)
         self._buttons = list()
 
     # Implementation of mandatory Scene methods
@@ -272,8 +263,8 @@ class Menu(Scene):
         '''
         Draw the Scene onscreen
         '''
-        self._screen.blit(self._img, (0, 0))
-        self._screen.blit(self._widgets_img, (0, 0))
+        self._screen.blit(self._img, COORD_UP_LEFT)
+        self._screen.blit(self._widgets_img, COORD_UP_LEFT)
 
     # Added functionnality
 
@@ -300,10 +291,13 @@ def button_demo():
     '''
     def zizou():
         print('oooh zizou')
+
+    pygame.init()
+    screen = pygame.display.set_mode((700, 700))
+
     button = Button.fromstring('C L I C K', action=zizou, size=(100, 15), bg_color=(40, 200, 40)) 
     zone = pygame.Rect((100, 300), button.area)
 
-    screen = pygame.display.set_mode((700, 700))
     screen.fill((0, 0, 255))
     screen.blit(button.img, zone)
     pygame.display.flip()
@@ -331,21 +325,21 @@ def stage_demo():
     '''
 
 
-    stage = Stage(20)
+    stage = Stage(STAGE_SIZE, 20)
     screen = stage.screen
 
-    main_img = pygame.Surface((700, 700))
+    main_img = pygame.Surface(STAGE_SIZE)
     main_img.fill((125, 125, 125))
-    main_img.blit(pygame.font.Font(None, 55).render('SCREEN 1', False, (0, 0, 0)),
+    main_img.blit(pygame.font.Font(None, 55).render('SCREEN 1', False, COLOR_BLACK),
                   (50, 50))
     main_menu = Menu(screen, img=main_img)
     button1 = Button.fromstring('goto 2', action=stage.nav_link('screen2'), 
                                 size=(100, 30))
     main_menu.add_button_at(button1, (15, 600))
-    stage['main menu'] = main_menu
+    stage[Stage.MAIN] = main_menu
 
     main_img.fill((240, 140, 0))
-    main_img.blit(pygame.font.Font(None, 55).render('SCREEN 2', False, (0, 0, 0)),
+    main_img.blit(pygame.font.Font(None, 55).render('SCREEN 2', False, COLOR_BLACK),
                   (50, 50))
     scene2 = Menu(screen, img=main_img)
     button2 = Button.fromstring('backto 1', action=stage.nav_link('main menu'),
@@ -357,4 +351,3 @@ def stage_demo():
 
 if __name__ == '__main__':
     stage_demo()
-    pass

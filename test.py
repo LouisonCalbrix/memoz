@@ -5,6 +5,7 @@
 # to ensure its proper functionning. 
 
 import pygame
+from config import *
 from utils import Stage, Menu, Button
 from memoz import *
 
@@ -82,22 +83,22 @@ def grid_display(rows, columns, nb_targets):
 
 def stage_game(rows, columns, nb_target):
     fps = 30
-    stage = Stage(fps)
+    stage = Stage(STAGE_SIZE, fps)
 
     main_img = pygame.Surface(stage.screen.get_size())
     main_img.fill((0, 0, 0))
-    main_img.blit(pygame.font.Font(None, 100).render('M E M O Z', True, GameScene.COLOR_INFO),
+    main_img.blit(pygame.font.Font(None, 100).render('M E M O Z', True, COLOR_ORANGE),
                   (50, 50))
     main_menu = Menu(stage.screen, img=main_img)
     play_button = Button.fromstring('Play', action=stage.nav_link('game'), 
                                     size_px=52, size=(150, 50), 
-                                    bg_color=GameScene.COLOR_INFO)
+                                    bg_color=COLOR_ORANGE, font_color=COLOR_BLACK)
     main_menu.add_button_at(play_button, (100, 350))
     quit_button = Button.fromstring('Quit', action=stage.nav_link('quit'),
                                     size_px=52, size=(150, 50), 
-                                    bg_color=GameScene.COLOR_INFO)
+                                    bg_color=COLOR_ORANGE, font_color=COLOR_BLACK)
     main_menu.add_button_at(quit_button, (100, 450))
-    stage['main menu'] = main_menu
+    stage[Stage.MAIN] = main_menu
 
     time = 2 * fps
     game = GameScene(stage.screen, grid_dim=(rows, columns), nb_target=nb_target,
