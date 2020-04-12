@@ -15,6 +15,9 @@ COLOR_BLACK = (0, 0, 0)
 COLOR_WHITE = (255, 255, 255)
 COLOR_GREEN = (0, 255, 0)
 COLOR_ORANGE = (250, 147, 0)
+COLOR_YELLOW = (255, 220, 58)
+COLOR_BLUE_1 = (67, 137, 215)
+COLOR_BLUE_2 = (56, 116, 181)
 
 # paths
 RESOURCES = os.path.join(os.path.dirname(__file__), 'resources')
