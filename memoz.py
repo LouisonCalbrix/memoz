@@ -294,7 +294,7 @@ class GameScene(utils.Scene):
         Write onscreen how many tries does the player have left.
         '''
         font = pygame.font.Font(None, 55)
-        txt_surf = font.render(str(self._remaining_tries), False, COLOR_ORANGE)
+        txt_surf = font.render(str(self._remaining_tries), True, COLOR_ORANGE)
         self._screen.blit(txt_surf, (0,0))
 
     def draw_timer(self):
