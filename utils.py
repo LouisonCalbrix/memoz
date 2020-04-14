@@ -137,12 +137,12 @@ class Scene(ABC):
         - draw is the method used to display the Scene onscreen
     '''
 
-    def __init__(self, screen):
+    def __init__(self, stage):
         '''
         Meant to be called by any subclass. This assign a _screen attribute to
         the instance of the subclass.
         '''
-        self._screen = screen
+        self._stage = stage
 
     def update(self, inputs):
         '''
@@ -229,24 +229,26 @@ class Menu(Scene):
     '''
     FixedButton = namedtuple('FixedButton', 'zone button')
 
-    def __init__(self, screen, img=None):
+    def __init__(self, stage, img=None):
         # call to __init__ method from superclass Scene
-        super().__init__(screen)
+        super().__init__(stage)
 
         # custom things done by this particular class
         # graphics
         if img == None:
-            self._img = pygame.Surface(screen.get_size())
-
-            # CHECK FOR ANOTHER OCCURENCE OF COLOR (0, 255, 80)
-
-            self._img.fill((0, 255, 80))
+            self._img = pygame.Surface(stage.screen.get_size())
+            self._img.fill(COLOR_BLACK)
 
         else:
             self._img = copy(img)
-        self._widgets_img = pygame.Surface(STAGE_SIZE)
+        self._widgets_img = pygame.Surface(stage.screen.get_size())
         self._widgets_img.set_colorkey(COLOR_GREEN)
         self._widgets_img.fill(COLOR_GREEN)
+
+        # convert images for faster blitting
+        self._img = self._img.convert()
+        self._widgets_img = self._widgets_img.convert()
+
         self._buttons = list()
 
     # Implementation of mandatory Scene methods
@@ -263,8 +265,8 @@ class Menu(Scene):
         '''
         Draw the Scene onscreen
         '''
-        self._screen.blit(self._img, COORD_UP_LEFT)
-        self._screen.blit(self._widgets_img, COORD_UP_LEFT)
+        self._stage.screen.blit(self._img, COORD_UP_LEFT)
+        self._stage.screen.blit(self._widgets_img, COORD_UP_LEFT)
 
     # Added functionnality
 
@@ -326,13 +328,12 @@ def stage_demo():
 
 
     stage = Stage(STAGE_SIZE, 20)
-    screen = stage.screen
 
     main_img = pygame.Surface(STAGE_SIZE)
     main_img.fill((125, 125, 125))
     main_img.blit(pygame.font.Font(None, 55).render('SCREEN 1', False, COLOR_BLACK),
                   (50, 50))
-    main_menu = Menu(screen, img=main_img)
+    main_menu = Menu(stage, img=main_img)
     button1 = Button.fromstring('goto 2', action=stage.nav_link('screen2'), 
                                 size=(100, 30))
     main_menu.add_button_at(button1, (15, 600))
@@ -341,7 +342,7 @@ def stage_demo():
     main_img.fill((240, 140, 0))
     main_img.blit(pygame.font.Font(None, 55).render('SCREEN 2', False, COLOR_BLACK),
                   (50, 50))
-    scene2 = Menu(screen, img=main_img)
+    scene2 = Menu(stage, img=main_img)
     button2 = Button.fromstring('backto 1', action=stage.nav_link('main menu'),
                                 size=(100, 30))
     scene2.add_button_at(button2, (15, 600))
