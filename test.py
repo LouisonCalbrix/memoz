@@ -108,21 +108,32 @@ def stage_game(rows, columns, nb_target):
         y_letter = pos_y + (square_size-letter_surf.get_height()) // 2
         main_img.blit(letter_surf, (x_letter, y_letter))
 
-    main_menu = Menu(stage.screen, img=main_img)
+    # main menu instanciation
+    main_menu = Menu(stage, img=main_img)
+    # buttons for main menu
+    # button 1: play
     play_button = Button.fromstring('Play', action=stage.nav_link('game'), 
                                     size_px=52, size=(150, 50), 
                                     bg_color=COLOR_BLUE_1, font_color=COLOR_BLACK)
     main_menu.add_button_at(play_button, (pos_x, 350))
+    # button 2: quit
     quit_button = Button.fromstring('Quit', action=stage.nav_link('quit'),
                                     size_px=52, size=(150, 50), 
                                     bg_color=COLOR_BLUE_1, font_color=COLOR_BLACK)
     main_menu.add_button_at(quit_button, (pos_x, 450))
+
+    # add main_menu Scene to the Stage as MAIN
     stage[Stage.MAIN] = main_menu
 
+    # GameScene instanciation
     time = 2 * fps
-    game = GameScene(stage.screen, grid_dim=(rows, columns), nb_target=nb_target,
-                     time=time, total_tries=5)
+    game = GameScene(stage, grid_dim=(rows, columns), nb_target=nb_target,
+                     time=time)
+
+    # add game Scene to the Stage as 'game'
     stage['game'] = game
+
+    # play
     stage.play()
 
 if __name__ == '__main__':
