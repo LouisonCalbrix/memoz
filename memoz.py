@@ -15,10 +15,6 @@ import utils
 from random import sample
 from config import *
 
-#constants
-SIDE_TILE = 40
-#WIDTH_TILE = 40
-#HEIGHT_TILE = 40
 MARGIN_TILE = 10
 
 class Tile:
@@ -32,6 +28,14 @@ class Tile:
     IMG_HIDDEN = pygame.image.load(PATH_TILE_HIDDEN)
     IMG_TARGET = pygame.image.load(PATH_TILE_TARGET)
     IMG_WRONG = pygame.image.load(PATH_TILE_WRONG)
+    # raise error if all three images are not the same size
+    if (IMG_HIDDEN.get_size() != IMG_TARGET.get_size() or
+        IMG_TARGET.get_size() != IMG_WRONG.get_size()):
+        raise ValueError('Images used should be the same size (pixel-wise)')
+    # raise error if images are not square
+    if IMG_HIDDEN.get_width() != IMG_HIDDEN.get_height():
+        raise ValueError('Square images expected')
+    SIDE_TILE = IMG_HIDDEN.get_width()
 
 
     def __init__(self, target, revealed):
@@ -120,8 +124,8 @@ class Grid(object):
         # geometry
         # calculate the margin between the window's edges and the grid's
         width_window, height_window = window_size
-        width_grid = self._width * SIDE_TILE + (self._width - 1) * MARGIN_TILE
-        height_grid = self._height * SIDE_TILE + (self._height - 1) * MARGIN_TILE
+        width_grid = self._width * Tile.SIDE_TILE + (self._width - 1) * MARGIN_TILE
+        height_grid = self._height * Tile.SIDE_TILE + (self._height - 1) * MARGIN_TILE
         self._margin = ((width_window - width_grid) // 2,
                         (height_window - height_grid) // 2)
 
@@ -153,6 +157,9 @@ class Grid(object):
 
     @property
     def points(self):
+        '''
+        Return number of revealed tiles that are targets.
+        '''
         flatten = [tile for row in self.tiles for tile in row if tile.revealed and tile.target]
         return len(flatten)
 
@@ -187,15 +194,15 @@ class Grid(object):
         # grid-wise coords 
         x_grid, y_grid = (coord-margin for coord, margin in zip(coords, self._margin))
 
-        width_grid = self._width * SIDE_TILE + (self._width - 1) * MARGIN_TILE
-        height_grid = self._height * SIDE_TILE + (self._height - 1) * MARGIN_TILE
+        width_grid = self._width * Tile.SIDE_TILE + (self._width - 1) * MARGIN_TILE
+        height_grid = self._height * Tile.SIDE_TILE + (self._height - 1) * MARGIN_TILE
         # check whether the cursor is in the grid area or not
         if 0 <= x_grid <= width_grid and 0 <= y_grid <= height_grid:
             # check whether the cursor is over a tile or the space between tiles
-            if (x_grid % (SIDE_TILE+MARGIN_TILE) <= SIDE_TILE and
-                y_grid % (SIDE_TILE+MARGIN_TILE) <= SIDE_TILE):
-                column = x_grid // (SIDE_TILE+MARGIN_TILE)
-                row = y_grid // (SIDE_TILE+MARGIN_TILE)
+            if (x_grid % (Tile.SIDE_TILE+MARGIN_TILE) <= Tile.SIDE_TILE and
+                y_grid % (Tile.SIDE_TILE+MARGIN_TILE) <= Tile.SIDE_TILE):
+                column = x_grid // (Tile.SIDE_TILE+MARGIN_TILE)
+                row = y_grid // (Tile.SIDE_TILE+MARGIN_TILE)
                 # temporary return value for testing purpose
 #                return row, column
                 return self[row, column]
@@ -206,8 +213,8 @@ class Grid(object):
         '''
         for i, row in enumerate(self._tiles):
             for j, tile in enumerate(row):
-                x_window = self._margin[0] + j * (SIDE_TILE + MARGIN_TILE)
-                y_window = self._margin[1] + i * (SIDE_TILE + MARGIN_TILE)
+                x_window = self._margin[0] + j * (Tile.SIDE_TILE + MARGIN_TILE)
+                y_window = self._margin[1] + i * (Tile.SIDE_TILE + MARGIN_TILE)
                 tile.draw_at(surface, (x_window, y_window))
 
     def __getitem__(self, coords):
@@ -220,7 +227,6 @@ class Grid(object):
                 res += '|{}'.format(self[i, j])
 
             res += '|\n'
-
         return res
 
 class GameScene(utils.Scene):
@@ -232,15 +238,18 @@ class GameScene(utils.Scene):
     TIMER_REL_HEIGHT = 2
     TIMER_ABS_HEIGHT = 0                  # to be initialized 
 
-    def __init__(self, screen, grid_dim=(2, 2), nb_target=2, time=2, total_tries=3):
-        super().__init__(screen)
+    def __init__(self, stage, grid_dim=(2, 2), nb_target=2, time=2,
+                 total_tries=3, lives=3):
+        super().__init__(stage)
         self._time = time           # time tiles will be revealed at the beginning
         self._difficulty = 0
         self._grid_dim = grid_dim   # size of Grid instances 
         self._nb_target = nb_target
         self._tries = total_tries   # number of tries before game over
+        self._lives = lives         # number of game that can be lost before back to menu
+        self._remaining_lives = lives
         self._game_over = True
-        type(self).TIMER_ABS_HEIGHT = self.TIMER_REL_HEIGHT * self._screen.get_height() // 100
+        type(self).TIMER_ABS_HEIGHT = self.TIMER_REL_HEIGHT * self._stage.screen.get_height() // 100
 
     # Implementation of Scene abstract methods
 
@@ -271,6 +280,7 @@ class GameScene(utils.Scene):
                         if not self._remaining_tries:              # lost game
                             self.difficulty -= 1
                             self._game_over = True               
+                            self.lives -= 1
                         elif self._grid.points == self.nb_target:  # won game
                             self.difficulty += 1
                             self._game_over = True
@@ -282,10 +292,10 @@ class GameScene(utils.Scene):
         '''
         Draw grid, remaining tries, timer(, points?)
         '''
-        self._screen.fill(COLOR_BLACK)
+        self._stage.screen.fill(COLOR_BLACK)
         self.draw_timer()
         self.draw_tries()
-        self._grid.draw(self._screen)
+        self._grid.draw(self._stage.screen)
 
     # Drawing sub-methods
 
@@ -295,7 +305,7 @@ class GameScene(utils.Scene):
         '''
         font = pygame.font.Font(None, 55)
         txt_surf = font.render(str(self._remaining_tries), True, COLOR_ORANGE)
-        self._screen.blit(txt_surf, (0,0))
+        self._stage.screen.blit(txt_surf, (0,0))
 
     def draw_timer(self):
         '''
@@ -303,10 +313,10 @@ class GameScene(utils.Scene):
         tiles are all revealed.
         '''
         if self._timer:
-            width = int((self._timer / self._time) * self._screen.get_width()) 
-            rect = pygame.Rect(0, self._screen.get_height()-self.TIMER_ABS_HEIGHT, 
+            width = int((self._timer / self._time) * self._stage.screen.get_width()) 
+            rect = pygame.Rect(0, self._stage.screen.get_height()-self.TIMER_ABS_HEIGHT, 
                                width, self.TIMER_ABS_HEIGHT)
-            pygame.draw.rect(self._screen, COLOR_ORANGE, rect)
+            pygame.draw.rect(self._stage.screen, COLOR_ORANGE, rect)
     
     # Own functionnalities
 
@@ -317,7 +327,7 @@ class GameScene(utils.Scene):
         self._game_over = False
         self._remaining_tries = self._tries   # current number of tries (to be decreased)
         self._timer = self._time              # timer (to be decreased) 
-        window_size = self._screen.get_size()
+        window_size = self._stage.screen.get_size()
         self._grid = Grid(*self.grid_dim, self.nb_target, window_size)
         print(self._grid, self.difficulty)    # cheat mode ON
 
@@ -329,6 +339,17 @@ class GameScene(utils.Scene):
     @property
     def grid_dim(self):
         return (dim + self.difficulty // 5 for dim in self._grid_dim)
+
+    @property
+    def lives(self):
+        return self._remaining_lives
+
+    @lives.setter
+    def lives(self, value):
+        self._remaining_lives = value
+        if self._remaining_lives == 0:
+            self._remaining_lives = self._lives
+            self._stage.target = self._stage.MAIN
 
     @property
     def difficulty(self):
