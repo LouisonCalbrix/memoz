@@ -88,20 +88,21 @@ def stage_game(rows, columns, nb_target):
     main_img = pygame.Surface(stage.screen.get_size())
     main_img.fill((0, 0, 0))
 
-    # MEMOZ with a blue square around each letter
+    # Memoz with a blue square around each letter
     width_memoz = round(0.8 * STAGE_SIZE[0])
     pos_x = (STAGE_SIZE[0] - width_memoz) // 2
     pos_y = 50
     square_size = 100
-    margin_size = (width_memoz - len('MEMOZ') * square_size) // (len('MEMOZ') - 1)
-    mem_font = pygame.font.Font(None, 100)
-    for i, letter in enumerate('MEMOZ'):
+    title = 'Memoz'
+    margin_size = (width_memoz - len(title) * square_size) // (len(title) - 1)
+    mem_font = pygame.font.Font(FONT_TITLE, 70)
+    for i, letter in enumerate(title):
         x_rect = pos_x + (square_size+margin_size)*i
         rect = pygame.Rect((x_rect, pos_y),
                            (square_size, square_size))
         pygame.draw.rect(main_img, COLOR_BLUE_1, rect)
         color = COLOR_BLACK
-        if letter == 'O':
+        if letter == 'o':
             color = COLOR_YELLOW
         letter_surf = mem_font.render(letter, True, color)
         x_letter = x_rect + (square_size-letter_surf.get_width()) // 2
