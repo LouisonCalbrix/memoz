@@ -268,6 +268,10 @@ class Menu(Scene):
         self._stage.screen.blit(self._img, COORD_UP_LEFT)
         self._stage.screen.blit(self._widgets_img, COORD_UP_LEFT)
 
+    @property
+    def img(self):
+        return self._img
+
     # Added functionnality
 
     def add_button_at(self, button, pos):
