@@ -77,7 +77,7 @@ class Stage(MutableMapping):
         '''
         Return the main menu Scene which is the entry point of the program.
         '''
-        return self._scenes['main menu']
+        return self._scenes[self.MAIN]
 
     @property
     def target(self):
@@ -137,12 +137,13 @@ class Scene(ABC):
         - draw is the method used to display the Scene onscreen
     '''
 
-    def __init__(self, stage):
+    def __init__(self, stage, name):
         '''
-        Meant to be called by any subclass. This assign a _screen attribute to
-        the instance of the subclass.
+        Meant to be called by any subclass. This registers the Scene to the 
+        managing Stage instance of the application.
         '''
         self._stage = stage
+        self._stage[name] = self
 
     def update(self, inputs):
         '''
@@ -229,9 +230,9 @@ class Menu(Scene):
     '''
     FixedButton = namedtuple('FixedButton', 'zone button')
 
-    def __init__(self, stage, img=None):
+    def __init__(self, stage, name, img=None):
         # call to __init__ method from superclass Scene
-        super().__init__(stage)
+        super().__init__(stage, name)
 
         # custom things done by this particular class
         # graphics
@@ -337,20 +338,18 @@ def stage_demo():
     main_img.fill((125, 125, 125))
     main_img.blit(pygame.font.Font(None, 55).render('SCREEN 1', False, COLOR_BLACK),
                   (50, 50))
-    main_menu = Menu(stage, img=main_img)
+    main_menu = Menu(stage, Stage.MAIN, img=main_img)
     button1 = Button.fromstring('goto 2', action=stage.nav_link('screen2'), 
                                 size=(100, 30))
     main_menu.add_button_at(button1, (15, 600))
-    stage[Stage.MAIN] = main_menu
 
     main_img.fill((240, 140, 0))
     main_img.blit(pygame.font.Font(None, 55).render('SCREEN 2', False, COLOR_BLACK),
                   (50, 50))
-    scene2 = Menu(stage, img=main_img)
+    scene2 = Menu(stage, 'screen2', img=main_img)
     button2 = Button.fromstring('backto 1', action=stage.nav_link('main menu'),
                                 size=(100, 30))
     scene2.add_button_at(button2, (15, 600))
-    stage['screen2'] = scene2
 
     stage.play()
 
