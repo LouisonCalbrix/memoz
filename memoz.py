@@ -237,11 +237,12 @@ class GameScene(utils.Scene):
     # height of the time relatively to the height of the whole screen (in %)
     TIMER_REL_HEIGHT = 2
     TIMER_ABS_HEIGHT = 0                  # to be initialized 
+    NAME = 'game'                         # name of the GameScene for the Stage
 
     def __init__(self, stage, grid_dim=(2, 2), nb_target=2, time=2,
                  total_tries=3, lives=3):
-        super().__init__(stage)
-        self._time = time           # time tiles will be revealed at the beginning
+        super().__init__(stage, self.NAME)
+        self._time = time * FPS     # time tiles will be revealed at the beginning
         self._difficulty = 0
         self._grid_dim = grid_dim   # size of Grid instances 
         self._nb_target = nb_target
@@ -249,7 +250,7 @@ class GameScene(utils.Scene):
         self._lives = lives         # number of game that can be lost before back to menu
         self._remaining_lives = lives
         self._game_over = True
-        type(self).TIMER_ABS_HEIGHT = self.TIMER_REL_HEIGHT * self._stage.screen.get_height() // 100
+        type(self).TIMER_ABS_HEIGHT = self.TIMER_REL_HEIGHT * STAGE_SIZE[1] // 100
 
     # Implementation of Scene abstract methods
 
@@ -303,7 +304,7 @@ class GameScene(utils.Scene):
         '''
         Write onscreen how many tries does the player have left.
         '''
-        font = pygame.font.Font(None, 55)
+        font = pygame.font.Font(FONT_PRIM, FONT_SIZE_2)
         txt_surf = font.render(str(self._remaining_tries), True, COLOR_ORANGE)
         self._stage.screen.blit(txt_surf, (0,0))
 
@@ -313,8 +314,8 @@ class GameScene(utils.Scene):
         tiles are all revealed.
         '''
         if self._timer:
-            width = int((self._timer / self._time) * self._stage.screen.get_width()) 
-            rect = pygame.Rect(0, self._stage.screen.get_height()-self.TIMER_ABS_HEIGHT, 
+            width = int((self._timer / self._time) * STAGE_SIZE[0])
+            rect = pygame.Rect(0, STAGE_SIZE[1]-self.TIMER_ABS_HEIGHT, 
                                width, self.TIMER_ABS_HEIGHT)
             pygame.draw.rect(self._stage.screen, COLOR_ORANGE, rect)
     
@@ -327,8 +328,7 @@ class GameScene(utils.Scene):
         self._game_over = False
         self._remaining_tries = self._tries   # current number of tries (to be decreased)
         self._timer = self._time              # timer (to be decreased) 
-        window_size = self._stage.screen.get_size()
-        self._grid = Grid(*self.grid_dim, self.nb_target, window_size)
+        self._grid = Grid(*self.grid_dim, self.nb_target, STAGE_SIZE)
         print(self._grid, self.difficulty)    # cheat mode ON
 
 
@@ -374,3 +374,104 @@ class GameScene(utils.Scene):
     @classmethod
     def HardGame(cls):
         pass
+
+class MemozMenu(utils.Menu):
+    '''
+    A Menu kind of Scene for memoz. Using this kind of Menu enforces the Memoz 
+    "look" and allows changes of look here to impact all the Menu created with
+    this class.
+    '''
+
+    # margins are indicated in pixels rmargins are relative to the element of the
+    # menu they're related to.
+    TITLE_MARGIN = 50
+    TITLE_RMARGIN = 1.5
+    MSG_RMARGIN = 1.2
+    NAV_INFLATE = (1.7, 0.9)
+    NAV_RMARGIN = 1.3
+
+    def __init__(self, stage, title, name, nav=None, msg=None):
+        '''
+        Initialize MemozMenu instance with a title that will be displayed using 
+        the FONT_TITLE. Options include:
+            - Buttons can be added directly at instanciation by giving nav a list
+              of tuples (button_name, action), these are preferably for navigating 
+              to other Scenes. 
+            - msg can contain a string that will be displayed using FONT_PRIM
+        '''
+        surf = pygame.Surface(STAGE_SIZE)
+        surf.fill(COLOR_BLACK)
+
+
+        pos_y = self.draw_title(surf, title)
+        # writes down msg if any
+        if msg:
+            pos_y = self.draw_msg(surf, msg, pos_y)
+
+        # super initializer needs to be called before adding buttons
+        super().__init__(stage, name, img=surf)
+
+        if nav:
+            self.add_nav(nav, pos_y)
+
+    def draw_title(self, surf, title):
+        '''
+        Draw title of this Menu on surf using FONT_TITLE and draw a square 
+        around each letter. A pos_y is returned from where it is safe to draw 
+        other elements.
+        '''
+        width_title = round(0.8 * STAGE_SIZE[0])           # title as wide as 80% of screen
+        self.pos_x = (STAGE_SIZE[0] - width_title) // 2
+        pos_y = self.TITLE_MARGIN
+        square_size = 0.9 * width_title // len(title)      # title is 90% squares 10% margin
+        margin_size = (width_title - len(title) * square_size) // (len(title) - 1)
+        mem_font = pygame.font.Font(FONT_TITLE, round(0.8*square_size))
+        for i, letter in enumerate(title):
+            x_rect = self.pos_x + (square_size+margin_size)*i
+            rect = pygame.Rect((x_rect, pos_y),
+                               (square_size, square_size))
+            pygame.draw.rect(surf, COLOR_BLUE_1, rect)
+            color = COLOR_BLACK
+            if letter == 'o':
+                color = COLOR_YELLOW
+            letter_surf = mem_font.render(letter, True, color)
+            x_letter = x_rect + (square_size-letter_surf.get_width()) // 2
+            y_letter = pos_y + (square_size-letter_surf.get_height()) // 2
+            surf.blit(letter_surf, (x_letter, y_letter))
+        return pos_y + self.TITLE_RMARGIN * square_size
+
+    def draw_msg(self, surf, msg, pos_y):
+        '''
+        Write down msg on surf starting from pos_y. It returns a pos_y from 
+        where it is safe to draw other elements.
+        '''
+        msg_font = pygame.font.Font(FONT_PRIM, FONT_SIZE_2)
+        for line in msg.split('\n'):
+            line_surf = msg_font.render(line, True, COLOR_YELLOW)
+            pos_x = (STAGE_SIZE[0] - line_surf.get_width()) // 2
+            surf.blit(line_surf, (pos_x, pos_y))
+            pos_y += round(msg_font.get_linesize() * self.MSG_RMARGIN)
+        return pos_y
+
+    def add_nav(self, nav, pos_y):
+        '''
+        Add several buttons (typically navigation buttons) and draw them on
+        the widget surface starting from pos_y.
+        '''
+        # determine buttons' size depending on the longest name
+        font = pygame.font.Font(FONT_PRIM, FONT_SIZE_2)
+        msize = max((font.size(name) for (name, _) in nav), key=lambda x_y: x_y[0])
+        # inflate
+        msize = tuple(round(dim * factor) for dim, factor in zip(msize, self.NAV_INFLATE))
+        b_width, b_height = msize
+        pos_x = (STAGE_SIZE[0] - b_width) // 2
+        height_avail = STAGE_SIZE[1] - pos_y
+        rel_y = (height_avail - b_height * ((1 + self.NAV_RMARGIN) * len(nav) - self.NAV_RMARGIN)) // 2
+        pos_y = pos_y + rel_y
+
+        for name, action in nav:
+            button = utils.Button.fromstring(name, action, fontfile=FONT_PRIM,
+                                             size_px=FONT_SIZE_2, font_color=COLOR_BLACK,
+                                             bg_color=COLOR_BLUE_1, size=msize)
+            super().add_button_at(button, (pos_x, pos_y))
+            pos_y += b_height * self.NAV_RMARGIN

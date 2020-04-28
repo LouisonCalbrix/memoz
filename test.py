@@ -82,75 +82,25 @@ def grid_display(rows, columns, nb_targets):
         clock.tick(fps)
 
 def stage_game(rows, columns, nb_target):
-    fps = 30
-    stage = Stage(STAGE_SIZE, fps)
+    stage = Stage(STAGE_SIZE, FPS)
 
-    class MemozMenu(Menu):
-        def __init__(self, title):
-            surf = pygame.Surface(stage.screen.get_size())
-            surf.fill(COLOR_BLACK)
 
-            # Memoz with a blue square around each letter
-            width_title = round(0.8 * STAGE_SIZE[0])
-            self.pos_x = (STAGE_SIZE[0] - width_title) // 2
-            pos_y = 50
-            square_size = 0.9 * width_title // len(title)
-            margin_size = (width_title - len(title) * square_size) // (len(title) - 1)
-            mem_font = pygame.font.Font(FONT_TITLE, round(0.8*square_size))
-            for i, letter in enumerate(title):
-                x_rect = self.pos_x + (square_size+margin_size)*i
-                rect = pygame.Rect((x_rect, pos_y),
-                                   (square_size, square_size))
-                pygame.draw.rect(surf, COLOR_BLUE_1, rect)
-                color = COLOR_BLACK
-                if letter == 'o':
-                    color = COLOR_YELLOW
-                letter_surf = mem_font.render(letter, True, color)
-                x_letter = x_rect + (square_size-letter_surf.get_width()) // 2
-                y_letter = pos_y + (square_size-letter_surf.get_height()) // 2
-                surf.blit(letter_surf, (x_letter, y_letter))
-            super().__init__(stage, img=surf)
-
+    # main nav
+    nav = (
+        ('Play', stage.nav_link(GameScene.NAME)),
+        ('Credits', stage.nav_link('credits')),
+        ('Quit', stage.nav_link('quit'))
+    )
     # main menu instanciation
-    main_menu = MemozMenu('Memoz')
-    # buttons for main menu
-    button_y = 350
-    button_x = main_menu.pos_x
-    button_margin = 20
-    button_size = (150, 50)
-    button_ft_size = 52
-    navbuttons_txt = (('Play', 'game'),
-                      ('Credits', 'credits'),
-                      ('Quit', 'quit'))
-    for i, (text, target) in enumerate(navbuttons_txt):
-        button = Button.fromstring(text, action=stage.nav_link(target),
-                                   size_px=button_ft_size, size=button_size,
-                                   bg_color=COLOR_BLUE_1, font_color=COLOR_BLACK)
-        main_menu.add_button_at(button, (button_x, button_y))
-        button_y += button_margin + button_size[1]
-
-    # add main_menu Scene to the Stage as MAIN
-    stage[Stage.MAIN] = main_menu
+    main_menu = MemozMenu(stage, 'Memoz', Stage.MAIN, nav=nav)
 
     # credits instanciation
-    credits = MemozMenu('Credits')
-    text_surf = pygame.font.Font(None, 55).render('Everything by:', True, COLOR_BLUE_2)
-    credits.img.blit(text_surf, (200, 250))
-    text_surf = pygame.font.Font(None, 55).render('Noé Calbrix & Louison Calbrix', True, COLOR_YELLOW)
-    credits.img.blit(text_surf, (50, 300))
-    button = Button.fromstring('Back', action=stage.nav_link(Stage.MAIN),
-                               size_px=button_ft_size, size=button_size,
-                               bg_color=COLOR_BLUE_1, font_color=COLOR_BLACK)
-    credits.add_button_at(button, (button_x, button_y))
-    stage['credits'] = credits
+    nav = (('Back', stage.nav_link(Stage.MAIN)), )
+    credits_msg = 'Everything by:\nNoé Calbrix & Louison Calbrix'
+    credits = MemozMenu(stage, 'Credits', 'credits', msg=credits_msg, nav=nav)
 
     # GameScene instanciation
-    time = 2 * fps
-    game = GameScene(stage, grid_dim=(rows, columns), nb_target=nb_target,
-                     time=time)
-
-    # add game Scene to the Stage as 'game'
-    stage['game'] = game
+    game = GameScene(stage, grid_dim=(rows, columns), nb_target=nb_target)
 
     # play
     stage.play()
