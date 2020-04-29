@@ -238,16 +238,34 @@ class GameScene(utils.Scene):
     TIMER_REL_HEIGHT = 2
     TIMER_ABS_HEIGHT = 0                  # to be initialized 
     NAME = 'game'                         # name of the GameScene for the Stage
+    EASY = {
+        '_grid_dim': (3, 3),
+        '_nb_target': 1,
+        '_time': 3.5,
+        '_tries': 5,
+    }
+    MEDIUM = {
+        '_grid_dim': (4, 3),
+        '_nb_target': 2,
+        '_time': 2.5,
+        '_tries': 3,
+    }
+    HARD = {
+        '_grid_dim': (7, 5),
+        '_nb_target': 3,
+        '_time': 1.8,
+        '_tries': 2,
+    }
 
     def __init__(self, stage, grid_dim=(2, 2), nb_target=2, time=2,
                  total_tries=3, lives=3):
         super().__init__(stage, self.NAME)
-        self._time = time * FPS     # time tiles will be revealed at the beginning
-        self._difficulty = 0
+        self._time = time           # time tiles will be revealed at the beginning
         self._grid_dim = grid_dim   # size of Grid instances 
         self._nb_target = nb_target
         self._tries = total_tries   # number of tries before game over
         self._lives = lives         # number of game that can be lost before back to menu
+        self._level = 0
         self._remaining_lives = lives
         self._game_over = True
         type(self).TIMER_ABS_HEIGHT = self.TIMER_REL_HEIGHT * STAGE_SIZE[1] // 100
@@ -279,11 +297,11 @@ class GameScene(utils.Scene):
                             self._remaining_tries -= 1
 
                         if not self._remaining_tries:              # lost game
-                            self.difficulty -= 1
+                            self.level -= 1
                             self._game_over = True               
                             self.lives -= 1
                         elif self._grid.points == self.nb_target:  # won game
-                            self.difficulty += 1
+                            self.level += 1
                             self._game_over = True
                     # mouse clicked while not over a tile
                     except AttributeError:
@@ -314,7 +332,7 @@ class GameScene(utils.Scene):
         tiles are all revealed.
         '''
         if self._timer:
-            width = int((self._timer / self._time) * STAGE_SIZE[0])
+            width = int((self._timer / (self._time * FPS)) * STAGE_SIZE[0])
             rect = pygame.Rect(0, STAGE_SIZE[1]-self.TIMER_ABS_HEIGHT, 
                                width, self.TIMER_ABS_HEIGHT)
             pygame.draw.rect(self._stage.screen, COLOR_ORANGE, rect)
@@ -327,18 +345,18 @@ class GameScene(utils.Scene):
         '''
         self._game_over = False
         self._remaining_tries = self._tries   # current number of tries (to be decreased)
-        self._timer = self._time              # timer (to be decreased) 
+        self._timer = self._time * FPS        # timer (to be decreased) 
         self._grid = Grid(*self.grid_dim, self.nb_target, STAGE_SIZE)
-        print(self._grid, self.difficulty)    # cheat mode ON
+        print(self._grid, self.level)         # cheat mode ON
 
 
     @property
     def nb_target(self):
-        return self._nb_target + self.difficulty // 2
+        return self._nb_target + self.level // 2
 
     @property
     def grid_dim(self):
-        return (dim + self.difficulty // 5 for dim in self._grid_dim)
+        return (dim + self.level // 5 for dim in self._grid_dim)
 
     @property
     def lives(self):
@@ -349,31 +367,31 @@ class GameScene(utils.Scene):
         self._remaining_lives = value
         if self._remaining_lives == 0:
             self._remaining_lives = self._lives
+            self.level = 0
             self._stage.target = self._stage.MAIN
 
     @property
     def difficulty(self):
-        return self._difficulty
+        diff_settings = { '_grid_dim', '_nb_target', '_time', '_total_tries' }
+        dif = { name: val for name, val in self.__dict__ if name in diff_settings }
+        return dif
 
     @difficulty.setter
-    def difficulty(self, value):
+    def difficulty(self, new_difficulty):
+        for name, value in new_difficulty.items():
+            setattr(self, name, value)
+
+    @property
+    def level(self):
+        return self._level
+
+    @level.setter
+    def level(self, value):
         if value < 0:
-            self._difficulty = 0
+            self._level = 0
         else:
-            self._difficulty = value
+            self._level = value
 
-    # factories
-    @classmethod
-    def EasyGame(cls):
-        pass
-
-    @classmethod
-    def NormalGame(cls):
-        pass
-
-    @classmethod
-    def HardGame(cls):
-        pass
 
 class MemozMenu(utils.Menu):
     '''
