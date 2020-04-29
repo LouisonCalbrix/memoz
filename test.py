@@ -88,6 +88,7 @@ def stage_game(rows, columns, nb_target):
     # main nav
     nav = (
         ('Play', stage.nav_link(GameScene.NAME)),
+        ('Difficulty', stage.nav_link('difficulty')),
         ('Credits', stage.nav_link('credits')),
         ('Quit', stage.nav_link('quit'))
     )
@@ -96,11 +97,25 @@ def stage_game(rows, columns, nb_target):
 
     # credits instanciation
     nav = (('Back', stage.nav_link(Stage.MAIN)), )
-    credits_msg = 'Everything by:\nNoé Calbrix & Louison Calbrix'
-    credits = MemozMenu(stage, 'Credits', 'credits', msg=credits_msg, nav=nav)
+    menu_msg = 'Everything by:\nNoé Calbrix & Louison Calbrix'
+    credits = MemozMenu(stage, 'Credits', 'credits', msg=menu_msg, nav=nav)
 
     # GameScene instanciation
     game = GameScene(stage, grid_dim=(rows, columns), nb_target=nb_target)
+
+    # difficulty screen
+    def change_difficulty(difficulty):
+        game.difficulty = difficulty
+        stage.nav_link(Stage.MAIN)()
+    nav = (
+        ('Easy', lambda : change_difficulty(GameScene.EASY)),
+        ('Medium', lambda : change_difficulty(GameScene.MEDIUM)),
+        ('Hard', lambda : change_difficulty(GameScene.HARD)),
+        ('Back', stage.nav_link(Stage.MAIN))
+    )
+    menu_msg = 'Choose the difficulty'
+    difficulty_menu = MemozMenu(stage, 'Difficulty', 'difficulty', 
+                                msg=menu_msg, nav=nav)
 
     # play
     stage.play()
