@@ -82,6 +82,7 @@ def grid_display(rows, columns, nb_targets):
         clock.tick(fps)
 
 def stage_game(rows, columns, nb_target):
+    pygame.mixer.pre_init(44100, size=-16, buffer=1024)
     stage = Stage(STAGE_SIZE, FPS)
 
 
@@ -116,6 +117,8 @@ def stage_game(rows, columns, nb_target):
     menu_msg = 'Choose the difficulty'
     difficulty_menu = MemozMenu(stage, 'Difficulty', 'difficulty', 
                                 msg=menu_msg, nav=nav)
+
+    init_sounds()
 
     # play
     stage.play()

@@ -229,6 +229,17 @@ class Grid(object):
             res += '|\n'
         return res
 
+
+# sounds to be used by following Scene subclasses
+ui_sound_ok = 0
+ui_sound_bad = 0
+def init_sounds():
+    global ui_sound_ok
+    global ui_sound_bad
+    ui_sound_ok = pygame.mixer.Sound(SOUND_OK)
+    ui_sound_bad = pygame.mixer.Sound(SOUND_BAD)
+
+
 class GameScene(utils.Scene):
     '''
     GameScene is the class that encapsulate the game logic. It allows the player
@@ -294,7 +305,10 @@ class GameScene(utils.Scene):
                     pos = pygame.mouse.get_pos()
                     try:
                         if not self._grid.reveal_tile(pos):        # wrong tile!
+                            ui_sound_bad.play()
                             self._remaining_tries -= 1
+                        else:
+                            ui_sound_ok.play()
 
                         if not self._remaining_tries:              # lost game
                             self.level -= 1
@@ -487,8 +501,14 @@ class MemozMenu(utils.Menu):
         rel_y = (height_avail - b_height * ((1 + self.NAV_RMARGIN) * len(nav) - self.NAV_RMARGIN)) // 2
         pos_y = pos_y + rel_y
 
+        def ring_and_action(action):
+            def func():
+                ui_sound_ok.play()
+                action()
+            return func
         for name, action in nav:
-            button = utils.Button.fromstring(name, action, fontfile=FONT_PRIM,
+            real_action = ring_and_action(action)
+            button = utils.Button.fromstring(name, real_action, fontfile=FONT_PRIM,
                                              size_px=FONT_SIZE_2, font_color=COLOR_BLACK,
                                              bg_color=COLOR_BLUE_1, size=msize)
             super().add_button_at(button, (pos_x, pos_y))

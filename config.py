@@ -30,5 +30,9 @@ PATH_TILE_TARGET = os.path.join(RESOURCES, 'right-tile.png')
 PATH_TILE_WRONG = os.path.join(RESOURCES, 'wrong-tile.png')
 FONT_TITLE = os.path.join(RESOURCES, 'LeagueSpartan-Bold.otf')
 FONT_PRIM = os.path.join(RESOURCES, 'Comic_Sans_MS.ttf')
+SOUND_OK = os.path.join(RESOURCES, 'click_ok.ogg')
+SOUND_BAD = os.path.join(RESOURCES, 'click_bad.ogg')
+
+# font sizes
 FONT_SIZE_1 = 72
 FONT_SIZE_2 = 46
