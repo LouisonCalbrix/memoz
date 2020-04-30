@@ -233,11 +233,14 @@ class Grid(object):
 # sounds to be used by following Scene subclasses
 ui_sound_ok = 0
 ui_sound_bad = 0
+ui_sound_menu = 0
 def init_sounds():
     global ui_sound_ok
     global ui_sound_bad
+    global ui_sound_menu
     ui_sound_ok = pygame.mixer.Sound(SOUND_OK)
     ui_sound_bad = pygame.mixer.Sound(SOUND_BAD)
+    ui_sound_menu = pygame.mixer.Sound(SOUND_MENU)
 
 
 class GameScene(utils.Scene):
@@ -503,7 +506,7 @@ class MemozMenu(utils.Menu):
 
         def ring_and_action(action):
             def func():
-                ui_sound_ok.play()
+                ui_sound_menu.play()
                 action()
             return func
         for name, action in nav:
