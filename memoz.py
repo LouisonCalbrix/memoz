@@ -1,14 +1,15 @@
 #! /usr/bin/env python3
 
-# memoz
-# A game where you need to use your short-term memory.
-# The player is shown a grid made of tiles, most of them are blue and some
-# of them are yellow. The player must remember where the yellow tiles are because,
-# after a while, all the tiles are flipped and it is not possible to see which
-# ones are yellow and which ones are blue. At that point, the player's goal is to
-# click on the tiles that are yellow to get points, and since he doesn't have  
-# unlimited tries he must choose wisely!
-# date: November 2019
+'''
+Memoz: A game where you need to use your short-term memory.
+The player is shown a grid made of tiles, most of them are blue and some
+of them are yellow. The player must remember where the yellow tiles are because,
+after a while, all the tiles are flipped and it is not possible to see which
+ones are yellow and which ones are blue. At that point, the player's goal is to
+click on the tiles that are yellow to get points, and since he doesn't have  
+unlimited tries he must choose wisely!
+date: November 2019
+'''
 
 import pygame
 import utils
@@ -271,7 +272,7 @@ class GameScene(utils.Scene):
         '_tries': 2,
     }
 
-    def __init__(self, stage, grid_dim=(2, 2), nb_target=2, time=2,
+    def __init__(self, stage, grid_dim=(4, 3), nb_target=2, time=2.5,
                  total_tries=3, lives=3):
         super().__init__(stage, self.NAME)
         self._time = time           # time tiles will be revealed at the beginning

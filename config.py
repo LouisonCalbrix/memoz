@@ -33,6 +33,7 @@ FONT_PRIM = os.path.join(RESOURCES, 'Comic_Sans_MS.ttf')
 SOUND_OK = os.path.join(RESOURCES, 'click_ok.ogg')
 SOUND_BAD = os.path.join(RESOURCES, 'click_bad.ogg')
 SOUND_MENU = os.path.join(RESOURCES, 'click_menu.ogg')
+ICON = os.path.join(RESOURCES, 'icon.png')
 
 # font sizes
 FONT_SIZE_1 = 72
